@@ -35,24 +35,10 @@ class LoginActivity : AppCompatActivity() {
 
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
-        //post email
-        RetrofitBuild.api.postEmail("kdg960914@naver.com").enqueue(object : Callback<String>{
-            override fun onResponse(call: Call<String>, response: Response<String>) {
-                if(response.isSuccessful) { // <--> response.code == 200
-                    Log.d(TAG2, "연결성공")
-                    val a: String = response.body()!!
-                    Log.d(TAG2,a)
-                } else { // code == 400
-                    // 실패 처리
-                    Log.d(TAG2, "연결실패")
-                }
-            }
-            override fun onFailure(call: Call<String>, t: Throwable) { // code == 500
-                // 실패 처리
-                Log.d(TAG2, "인터넷 네트워크 문제")
-                Log.d(TAG2, t.toString())
-            }
-        })
+
+        val testEmail = "kdg960914@naver.com"
+        postEmail(testEmail)
+        //test()
 
         val signInButton = findViewById<SignInButton>(R.id.sign_in_button)
         signInButton.setOnClickListener {
@@ -71,7 +57,6 @@ class LoginActivity : AppCompatActivity() {
 
     public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             handleSignInResult(task)
@@ -88,27 +73,9 @@ class LoginActivity : AppCompatActivity() {
                 Log.d(TAG,"Name = $name")
                 Log.d(TAG,"email = $email")
                 Log.d(TAG,"idToken = $idToken")
-                updateUI(account)
+                updateUI()
 
-
-                //post google
-                RetrofitBuild.api.postGoogle(idToken).enqueue(object : Callback<String>{
-                    override fun onResponse(call: Call<String>, response: Response<String>) {
-                        if(response.isSuccessful) { // <--> response.code == 200
-                            Log.d(TAG2, "연결성공")
-                            val a: String = response.body()!!
-                            Log.d(TAG2,a)
-                        } else { // code == 400
-                            // 실패 처리
-                            Log.d(TAG2, "연결실패")
-                        }
-                    }
-                    override fun onFailure(call: Call<String>, t: Throwable) { // code == 500
-                        // 실패 처리
-                        Log.d(TAG2, "인터넷 네트워크 문제")
-                        Log.d(TAG2, t.toString())
-                    }
-                })
+                postgoogle(idToken)
             }
 
         }catch (e: ApiException){
@@ -116,7 +83,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateUI(account: GoogleSignInAccount) {
+    private fun updateUI() {
         val Intent = Intent(this, MainActivity::class.java)
         startActivity(Intent)
     }
@@ -132,5 +99,69 @@ class LoginActivity : AppCompatActivity() {
             }
             */
         }
+    }
+
+    //-----------------------------------------------------------------------
+    //----------------------------Rest Api function--------------------------
+    //-----------------------------------------------------------------------
+
+    private fun postgoogle(idToken: String) {
+        RetrofitBuild.api.postGoogle(idToken).enqueue(object : Callback<String>{
+            override fun onResponse(call: Call<String>, response: Response<String>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val a: String = response.body()!!
+                    Log.d(TAG2,a)
+                } else { // code == 400
+                    // 실패 처리
+                    Log.d(TAG2, "연결실패")
+                }
+            }
+            override fun onFailure(call: Call<String>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
+    private fun postEmail(email: String) {
+        RetrofitBuild.api.postEmail(email).enqueue(object : Callback<String>{
+            override fun onResponse(call: Call<String>, response: Response<String>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val a: String = response.body()!!
+                    Log.d(TAG2,a)
+                } else { // code == 400
+                    // 실패 처리
+                    Log.d(TAG2, "연결실패")
+                }
+            }
+            override fun onFailure(call: Call<String>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
+    private fun test(){
+        RetrofitBuild.api.testApi().enqueue(object : Callback<String>{
+            override fun onResponse(call: Call<String>, response: Response<String>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val a: String = response.body()!!
+                    Log.d(TAG2,a)
+                } else { // code == 400
+                    // 실패 처리
+                    Log.d(TAG2, "연결실패")
+                }
+            }
+            override fun onFailure(call: Call<String>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
     }
 }
