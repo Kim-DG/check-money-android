@@ -11,12 +11,16 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class LoginActivity : AppCompatActivity() {
     //google client
     private lateinit var googleSignInClient: GoogleSignInClient
     private val RC_SIGN_IN = 99
     private val TAG = "LoginActivity"
+    private val TAG2 = "LoginActivity_API"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +34,25 @@ class LoginActivity : AppCompatActivity() {
         val gsa = GoogleSignIn.getLastSignedInAccount(this@LoginActivity)
 
         googleSignInClient = GoogleSignIn.getClient(this, gso)
+
+        //post email
+        RetrofitBuild.api.postEmail("kdg960914@naver.com").enqueue(object : Callback<String>{
+            override fun onResponse(call: Call<String>, response: Response<String>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val a: String = response.body()!!
+                    Log.d(TAG2,a)
+                } else { // code == 400
+                    // 실패 처리
+                    Log.d(TAG2, "연결실패")
+                }
+            }
+            override fun onFailure(call: Call<String>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
 
         val signInButton = findViewById<SignInButton>(R.id.sign_in_button)
         signInButton.setOnClickListener {
@@ -66,6 +89,26 @@ class LoginActivity : AppCompatActivity() {
                 Log.d(TAG,"email = $email")
                 Log.d(TAG,"idToken = $idToken")
                 updateUI(account)
+
+
+                //post google
+                RetrofitBuild.api.postGoogle(idToken).enqueue(object : Callback<String>{
+                    override fun onResponse(call: Call<String>, response: Response<String>) {
+                        if(response.isSuccessful) { // <--> response.code == 200
+                            Log.d(TAG2, "연결성공")
+                            val a: String = response.body()!!
+                            Log.d(TAG2,a)
+                        } else { // code == 400
+                            // 실패 처리
+                            Log.d(TAG2, "연결실패")
+                        }
+                    }
+                    override fun onFailure(call: Call<String>, t: Throwable) { // code == 500
+                        // 실패 처리
+                        Log.d(TAG2, "인터넷 네트워크 문제")
+                        Log.d(TAG2, t.toString())
+                    }
+                })
             }
 
         }catch (e: ApiException){
