@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".JoinPopupActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="25dp">
+
+        <ImageView
+                android:id="@+id/img_logo"
+                android:layout_width="184.2dp"
+                android:layout_height="45.6dp"
+                android:layout_gravity="center"
+                android:background="@drawable/text_logo"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <EditText
+                android:id="@+id/et_id"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:padding="20dp"
+                android:hint="Email"
+                android:textAlignment="textStart"
+                android:textColor="@color/black"
+                android:textColorHint="#D3D3D3"/>
+            <Button
+                android:id="@+id/btn_auth"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.8"
+                android:layout_marginLeft="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_marginTop="10dp"
+                android:text="인증"
+                android:textColor="@color/logoBlue"
+                android:textAllCaps="false"
+                android:background="@drawable/button_design"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/text_auth_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:padding="10dp"
+            android:text=""
+            android:textColor="@color/logoBlue"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <EditText
+                android:id="@+id/et_auth"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:padding="20dp"
+                android:hint="인증번호"
+                android:textAlignment="textStart"
+                android:textColor="@color/black"
+                android:textColorHint="#D3D3D3"/>
+            <Button
+                android:id="@+id/btn_auth_check"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.8"
+                android:layout_marginLeft="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_marginTop="10dp"
+                android:text="확인"
+                android:textColor="@color/logoBlue"
+                android:textAllCaps="false"
+                android:background="@drawable/button_design"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/text_auth_result"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:padding="10dp"
+            android:text=""
+            android:textColor="@color/logoBlue"
+            android:textSize="12sp" />
+
+        <EditText
+            android:id="@+id/et_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="20dp"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:textAlignment="textStart"
+            android:textColor="@color/black"
+            android:textColorHint="#D3D3D3"/>
+
+        <EditText
+            android:id="@+id/et_password_check"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="20dp"
+            android:hint="Confirm Password"
+            android:inputType="textPassword"
+            android:textAlignment="textStart"
+            android:textColor="@color/black"
+            android:textColorHint="#D3D3D3"/>
+
+        <TextView
+            android:id="@+id/text_pw_confirm_result"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:padding="10dp"
+            android:text="test/비밀번호가 일치하지 않습니다."
+            android:textColor="@color/red"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="right">
+            <Button
+                android:id="@+id/btn_create"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:padding="15dp"
+                android:text="생성"
+                android:textSize="20sp"
+                android:textColor="@color/logoBlue"
+                android:background="#00ff0000">
+            </Button>
+
+            <Button
+                android:id="@+id/btn_cancel"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:padding="15dp"
+                android:text="취소"
+                android:textSize="20sp"
+                android:textColor="@color/logoBlue"
+                android:background="#00ff0000">
+            </Button>
+        </LinearLayout>
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

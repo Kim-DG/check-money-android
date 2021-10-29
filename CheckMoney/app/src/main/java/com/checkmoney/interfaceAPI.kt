@@ -1,19 +1,15 @@
 package com.checkmoney
 
 import retrofit2.Call
-import retrofit2.http.FormUrlEncoded
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.Query
+import retrofit2.http.*
 
 interface API{
     @POST("api/auth/request/email")
-    fun postEmail(@Query("email") email: String): Call<String>
+    fun postEmail(@Body email: Email): Call<Result>
 
     @POST("api/auth/login/google")
-    fun postGoogle(@Query("id_Token") id_token: String): Call<String>
+    fun postGoogle(@Body idToken: IdToken): Call<IdToken>
 
-    @GET("/api")
-    fun testApi(): Call<String>
-
+    @POST("api/auth/confirm")
+    fun postAuth(@Body authConfirm: AuthConfirm): Call<Result>
 }
