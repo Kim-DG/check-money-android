@@ -40,7 +40,6 @@
                 android:layout_weight="0.8"
                 android:layout_marginLeft="10dp"
                 android:layout_marginBottom="10dp"
-                android:layout_marginTop="10dp"
                 android:text="인증"
                 android:textColor="@color/logoBlue"
                 android:textAllCaps="false"
@@ -78,12 +77,11 @@
                 android:layout_weight="0.8"
                 android:layout_marginLeft="10dp"
                 android:layout_marginBottom="10dp"
-                android:layout_marginTop="10dp"
+
                 android:text="확인"
                 android:textColor="@color/logoBlue"
                 android:textAllCaps="false"
                 android:background="@drawable/button_design"/>
-
         </LinearLayout>
 
         <TextView
@@ -95,6 +93,22 @@
             android:text=""
             android:textColor="@color/logoBlue"
             android:textSize="12sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="20dp">
+            <EditText
+                android:id="@+id/et_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp"
+                android:hint="별명"
+                android:textAlignment="textStart"
+                android:textColor="@color/black"
+                android:textColorHint="#D3D3D3"/>
+        </LinearLayout>
+
 
         <EditText
             android:id="@+id/et_password"
@@ -124,9 +138,24 @@
             android:layout_height="wrap_content"
             android:layout_gravity="right"
             android:padding="10dp"
-            android:text="test/비밀번호가 일치하지 않습니다."
+            android:text=""
             android:textColor="@color/red"
             android:textSize="12sp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:paddingTop="15dp">
+            <TextView
+                android:id="@+id/text_join_check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:text=""
+                android:textColor="@color/red"
+                android:textSize="12sp" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"

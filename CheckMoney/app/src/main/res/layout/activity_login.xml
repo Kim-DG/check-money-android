@@ -48,7 +48,7 @@
                 android:textColorHint="#D3D3D3"/>
 
             <EditText
-                android:id="@+id/et_password"
+                android:id="@+id/et_pw"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="20dp"

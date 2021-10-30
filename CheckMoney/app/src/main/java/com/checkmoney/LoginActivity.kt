@@ -3,8 +3,11 @@ package com.checkmoney
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.widget.Button
+import android.widget.EditText
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -22,27 +25,39 @@ class LoginActivity : AppCompatActivity() {
     private val RC_SIGN_IN = 99
     private val TAG = "LoginActivity"
     private val TAG2 = "LoginActivity_API"
-    private lateinit var join: Button
-    private lateinit var login: Button
-    private lateinit var signInButton: SignInButton
+    private lateinit var btn_join: Button
+    private lateinit var btn_login: Button
+    private lateinit var btn_signInButton: SignInButton
+    private lateinit var et_id: EditText
+    private lateinit var et_pw: EditText
+    private lateinit var userId: String
+    private lateinit var userPw: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        join = findViewById(R.id.btn_join)
-        login = findViewById(R.id.btn_login)
-        signInButton = findViewById(R.id.sign_in_button)
+        btn_join = findViewById(R.id.btn_join)
+        btn_login = findViewById(R.id.btn_login)
+        btn_signInButton = findViewById(R.id.sign_in_button)
+        et_id = findViewById(R.id.et_id)
+        et_pw = findViewById(R.id.et_pw)
 
-        join.setOnClickListener{
+        checkInput()
 
+        btn_join.setOnClickListener{
             val dialog = JoinPopupActivity(this@LoginActivity)
-            dialog.start()/*
-            val joinIntent = Intent(this,JoinPopupActivity::class.java)
-            startActivity(joinIntent)*/
+            dialog.start()
         }
 
-        signInButton.setOnClickListener {
+        btn_login.setOnClickListener {
+            if(userId != "" && userPw != ""){
+                val userInfo = UserInfo(userId,userPw)
+                postLogin(userInfo)
+            }
+        }
+
+        btn_signInButton.setOnClickListener {
             val gsa = GoogleSignIn.getLastSignedInAccount(this@LoginActivity)
             if (gsa?.id != null) {
                 val Intent = Intent(this, MainActivity::class.java)
@@ -50,12 +65,7 @@ class LoginActivity : AppCompatActivity() {
             }
             else signIn()
         }
-
         googleBuildIn()
-
-        val testEmail = "kdg960914@naver.com"
-        val test = Email(email = testEmail)
-        //test()
     }
 
     private fun googleBuildIn() {
@@ -78,6 +88,25 @@ class LoginActivity : AppCompatActivity() {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             handleSignInResult(task)
         }
+    }
+
+    private fun checkInput(){
+        et_id.addTextChangedListener(object: TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                userId = et_id.text.toString()
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+        et_pw.addTextChangedListener(object: TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                userPw = et_pw.text.toString()
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
     }
 
     private fun handleSignInResult(task: Task<GoogleSignInAccount>?) {
@@ -144,19 +173,21 @@ class LoginActivity : AppCompatActivity() {
         })
     }
 
-    private fun postEmail(email: Email) {
-        RetrofitBuild.api.postEmail(email).enqueue(object : Callback<Result>{
-            override fun onResponse(call: Call<Result>, response: Response<Result>) {
+    private fun postLogin(userInfo: UserInfo) {
+        RetrofitBuild.api.postLogin(userInfo).enqueue(object : Callback<ResultAndToken>{
+            override fun onResponse(call: Call<ResultAndToken>, response: Response<ResultAndToken>) {
                 if(response.isSuccessful) { // <--> response.code == 200
                     Log.d(TAG2, "연결성공")
                     val a = response.body()
                     Log.d(TAG2,a.toString())
+                    val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
+                    startActivity(mainIntent)
                 } else { // code == 400
                     // 실패 처리
                     Log.d(TAG2, "연결실패")
                 }
             }
-            override fun onFailure(call: Call<Result>, t: Throwable) { // code == 500
+            override fun onFailure(call: Call<ResultAndToken>, t: Throwable) { // code == 500
                 // 실패 처리
                 Log.d(TAG2, "인터넷 네트워크 문제")
                 Log.d(TAG2, t.toString())

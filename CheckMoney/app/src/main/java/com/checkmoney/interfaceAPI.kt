@@ -12,4 +12,10 @@ interface API{
 
     @POST("api/auth/confirm")
     fun postAuth(@Body authConfirm: AuthConfirm): Call<Result>
+
+    @POST("api/auth/join")
+    fun postJoin(@Body join: Join): Call<Result>
+
+    @POST("api/auth/login/email")
+    fun postLogin(@Body userInfo: UserInfo): Call<ResultAndToken>
 }
