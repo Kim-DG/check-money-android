@@ -8,7 +8,7 @@ interface API{
     fun postEmail(@Body email: Email): Call<Result>
 
     @POST("api/auth/login/google")
-    fun postGoogle(@Body idToken: IdToken): Call<IdToken>
+    fun postGoogle(@Body idToken: IdToken): Call<ResultAndToken>
 
     @POST("api/auth/confirm")
     fun postAuth(@Body authConfirm: AuthConfirm): Call<Result>

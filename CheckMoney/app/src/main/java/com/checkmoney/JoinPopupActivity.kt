@@ -244,6 +244,7 @@ class JoinPopupActivity(context : Context): Dialog(context) {
                 Log.d(TAG, "인터넷 네트워크 문제")
                 Log.d(TAG, t.toString())
                 authResult.setTextColor(ContextCompat.getColor(context, R.color.red))
+
                 authResult.text = "네트워크 문제가 발생하였습니다."
             }
         })

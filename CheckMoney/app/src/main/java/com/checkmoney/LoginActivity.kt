@@ -1,6 +1,7 @@
 package com.checkmoney
 
 import android.content.Intent
+import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
@@ -8,6 +9,8 @@ import android.text.TextWatcher
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
+import android.widget.Toast
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -22,16 +25,18 @@ import retrofit2.Response
 class LoginActivity : AppCompatActivity() {
     //google client
     private lateinit var googleSignInClient: GoogleSignInClient
-    private val RC_SIGN_IN = 99
-    private val TAG = "LoginActivity"
-    private val TAG2 = "LoginActivity_API"
     private lateinit var btn_join: Button
     private lateinit var btn_login: Button
     private lateinit var btn_signInButton: SignInButton
     private lateinit var et_id: EditText
     private lateinit var et_pw: EditText
+    private lateinit var text_discorrect: TextView
     private lateinit var userId: String
     private lateinit var userPw: String
+
+    private val RC_SIGN_IN = 99
+    private val TAG = "LoginActivity"
+    private val TAG2 = "LoginActivity_API"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,8 +47,10 @@ class LoginActivity : AppCompatActivity() {
         btn_signInButton = findViewById(R.id.sign_in_button)
         et_id = findViewById(R.id.et_id)
         et_pw = findViewById(R.id.et_pw)
+        text_discorrect = findViewById(R.id.text_discorrect)
 
         checkInput()
+        autoLogin()
 
         btn_join.setOnClickListener{
             val dialog = JoinPopupActivity(this@LoginActivity)
@@ -54,6 +61,15 @@ class LoginActivity : AppCompatActivity() {
             if(userId != "" && userPw != ""){
                 val userInfo = UserInfo(userId,userPw)
                 postLogin(userInfo)
+            }
+            if(userId == "" && userPw != ""){
+                text_discorrect.text = "아이디를 입력해 주세요."
+            }
+            if(userId != "" && userPw == ""){
+                text_discorrect.text = "비밀번호를 입력해 주세요."
+            }
+            if(userId == "" && userPw == ""){
+                text_discorrect.text = "아이디와 비밀번호를 입력해 주세요."
             }
         }
 
@@ -67,6 +83,30 @@ class LoginActivity : AppCompatActivity() {
         }
         googleBuildIn()
     }
+
+    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == RC_SIGN_IN) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            handleSignInResult(task)
+        }
+    }
+
+    //자동으로 id,pw 입력
+    private fun autoLogin() {
+        et_id.setText(AppPref.prefs.myId)
+        et_pw.setText(AppPref.prefs.myPw)
+
+        if(AppPref.prefs.myId.isNullOrBlank()
+            || AppPref.prefs.myPw.isNullOrBlank()) {
+        }
+        else { // SharedPreferences 안에 값이 저장되어 있을 때 -> MainActivity로 이동
+            val mainIntent = Intent(this, MainActivity::class.java)
+            startActivity(mainIntent)
+            finish()
+        }
+    }
+
 
     private fun googleBuildIn() {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -82,14 +122,7 @@ class LoginActivity : AppCompatActivity() {
         startActivityForResult(signInIntent, RC_SIGN_IN)
     }
 
-    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == RC_SIGN_IN) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-            handleSignInResult(task)
-        }
-    }
-
+    //입력한 id, pw 저장
     private fun checkInput(){
         et_id.addTextChangedListener(object: TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -154,18 +187,18 @@ class LoginActivity : AppCompatActivity() {
     //-----------------------------------------------------------------------
 
     private fun postgoogle(idToken: IdToken) {
-        RetrofitBuild.api.postGoogle(idToken).enqueue(object : Callback<IdToken>{
-            override fun onResponse(call: Call<IdToken>, response: Response<IdToken>) {
+        RetrofitBuild.api.postGoogle(idToken).enqueue(object : Callback<ResultAndToken>{
+            override fun onResponse(call: Call<ResultAndToken>, response: Response<ResultAndToken>) {
                 if(response.isSuccessful) { // <--> response.code == 200
                     Log.d(TAG2, "연결성공")
-                    val a: IdToken = response.body()!!
+                    val a: ResultAndToken = response.body()!!
                     Log.d(TAG2,a.toString())
                 } else { // code == 400
                     // 실패 처리
                     Log.d(TAG2, "연결실패")
                 }
             }
-            override fun onFailure(call: Call<IdToken>, t: Throwable) { // code == 500
+            override fun onFailure(call: Call<ResultAndToken>, t: Throwable) { // code == 500
                 // 실패 처리
                 Log.d(TAG2, "인터넷 네트워크 문제")
                 Log.d(TAG2, t.toString())
@@ -180,20 +213,26 @@ class LoginActivity : AppCompatActivity() {
                     Log.d(TAG2, "연결성공")
                     val a = response.body()
                     Log.d(TAG2,a.toString())
-                    val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
-                    startActivity(mainIntent)
+                    if(a?.result == "true") {
+                        AppPref.prefs.myId = userId
+                        AppPref.prefs.myPw = userPw
+                        val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
+                        startActivity(mainIntent)
+                    }
+                    else
+                        text_discorrect.text = "아이디, 비밀번호가 일치하지 않습니다."
                 } else { // code == 400
                     // 실패 처리
                     Log.d(TAG2, "연결실패")
+                    text_discorrect.text = "아이디, 비밀번호가 일치하지 않습니다."
                 }
             }
             override fun onFailure(call: Call<ResultAndToken>, t: Throwable) { // code == 500
                 // 실패 처리
                 Log.d(TAG2, "인터넷 네트워크 문제")
                 Log.d(TAG2, t.toString())
+                text_discorrect.text = "네트워크 문제가 발생했습니다."
             }
         })
     }
-
-
 }

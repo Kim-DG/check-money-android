@@ -63,7 +63,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="right"
-                android:text="test/아이디, 비밀번호가 일치하지 않습니다"
+                android:text=""
                 android:textSize="12sp"
                 android:textColor="@color/red"/>
         </LinearLayout>
