@@ -32,3 +32,7 @@ data class UserInfo(
     val email: String,
     val password: String
 )
+
+data class ProfileData(
+    val name: String
+)

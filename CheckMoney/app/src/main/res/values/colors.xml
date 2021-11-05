@@ -9,4 +9,5 @@
     <color name="white">#FFFFFFFF</color>
     <color name="red">#FF0000</color>
     <color name="logoBlue">#0064FF</color>
+    <color name="logoSkyBlue">#0096FF</color>
 </resources>

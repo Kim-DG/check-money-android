@@ -42,7 +42,6 @@ class JoinPopupActivity(context : Context): Dialog(context) {
     private val TAG = "JoinPopupActivity"
 
     fun start() {
-        //context.dialogResize(this@JoinPopupActivity, 0.9f, 0.9f)
         dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
         dlg.setContentView(R.layout.activity_join_popup)     //다이얼로그에 사용할 xml 파일을 불러옴
         dlg.window!!.setLayout(WindowManager.LayoutParams.MATCH_PARENT,WindowManager.LayoutParams.WRAP_CONTENT)
