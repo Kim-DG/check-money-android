@@ -1,5 +1,6 @@
 package com.checkmoney
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Point
 import androidx.appcompat.app.AppCompatActivity
@@ -27,7 +28,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var btn_logout: TextView
     private lateinit var naviView: NavigationView
     private lateinit var text_email: TextView
-    private lateinit var text_logout: TextView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -36,12 +36,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         initRecycler()
         setLayoutSize()
 
+        naviView.setNavigationItemSelectedListener(this)
+        naviView.bringToFront()
+
         btn_navi.setOnClickListener {
             layout_drawer.openDrawer(GravityCompat.START)
-        }
-
-        text_logout.setOnClickListener {
-            //로그아웃 구현
         }
 
         btn_logout.setOnClickListener {
@@ -54,6 +53,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    @SuppressLint("CutPasteId")
     private fun setVariable() {
         layout_drawer = findViewById(R.id.layout_drawer)
         btn_navi = findViewById(R.id.btn_navi)
@@ -62,7 +62,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         rv_profile = nav_header.findViewById(R.id.rv_profile)
         btn_logout = nav_header.findViewById(R.id.text_logout)
         text_email = nav_header.findViewById(R.id.text_email)
-        text_logout = nav_header.findViewById(R.id.text_logout)
     }
 
     private fun setLayoutSize() {
@@ -97,6 +96,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun initRecycler() {
         profileAdapter = ProfileAdapter(this)
         rv_profile.adapter = profileAdapter

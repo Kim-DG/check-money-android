@@ -42,15 +42,14 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        btn_join = findViewById(R.id.btn_join)
-        btn_login = findViewById(R.id.btn_login)
-        btn_signInButton = findViewById(R.id.sign_in_button)
-        et_id = findViewById(R.id.et_id)
-        et_pw = findViewById(R.id.et_pw)
-        text_discorrect = findViewById(R.id.text_discorrect)
-
+        //변수 초기화
+        setVariable()
+        //id, pw입력
         checkInput()
+
         autoLogin()
+
+        googleBuildIn()
 
         btn_join.setOnClickListener{
             val dialog = JoinPopupActivity(this@LoginActivity)
@@ -81,7 +80,6 @@ class LoginActivity : AppCompatActivity() {
             }
             else signIn()
         }
-        googleBuildIn()
     }
 
     public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -90,6 +88,15 @@ class LoginActivity : AppCompatActivity() {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             handleSignInResult(task)
         }
+    }
+
+    private fun setVariable() {
+        btn_join = findViewById(R.id.btn_join)
+        btn_login = findViewById(R.id.btn_login)
+        btn_signInButton = findViewById(R.id.sign_in_button)
+        et_id = findViewById(R.id.et_id)
+        et_pw = findViewById(R.id.et_pw)
+        text_discorrect = findViewById(R.id.text_discorrect)
     }
 
     //자동으로 id,pw 입력
@@ -101,25 +108,9 @@ class LoginActivity : AppCompatActivity() {
             || AppPref.prefs.myPw.isNullOrBlank()) {
         }
         else { // SharedPreferences 안에 값이 저장되어 있을 때 -> MainActivity로 이동
-            val mainIntent = Intent(this, MainActivity::class.java)
-            startActivity(mainIntent)
-            finish()
+            val userInfo = UserInfo(AppPref.prefs.myId!!, AppPref.prefs.myPw!!)
+            postLogin(userInfo)
         }
-    }
-
-
-    private fun googleBuildIn() {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken("500159069581-m2dqev5jhbpumksnoodl7bmi90v5kjtl.apps.googleusercontent.com")
-            .requestEmail()
-            .build()
-
-        googleSignInClient = GoogleSignIn.getClient(this, gso)
-    }
-
-    private fun signIn() {
-        val signInIntent = googleSignInClient.signInIntent
-        startActivityForResult(signInIntent, RC_SIGN_IN)
     }
 
     //입력한 id, pw 저장
@@ -140,6 +131,24 @@ class LoginActivity : AppCompatActivity() {
             }
             override fun afterTextChanged(s: Editable?) {}
         })
+    }
+
+    private fun updateUI() {
+        val Intent = Intent(this, MainActivity::class.java)
+        startActivity(Intent)
+    }
+
+    //-----------------------------------------------------------------------
+    //                             Google Login
+    //-----------------------------------------------------------------------
+
+    private fun googleBuildIn() {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken("500159069581-m2dqev5jhbpumksnoodl7bmi90v5kjtl.apps.googleusercontent.com")
+            .requestEmail()
+            .build()
+
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
     }
 
     private fun handleSignInResult(task: Task<GoogleSignInAccount>?) {
@@ -164,9 +173,10 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateUI() {
-        val Intent = Intent(this, MainActivity::class.java)
-        startActivity(Intent)
+    //구글 로그인
+    private fun signIn() {
+        val signInIntent = googleSignInClient.signInIntent
+        startActivityForResult(signInIntent, RC_SIGN_IN)
     }
 
     private fun signOut() { // 로그아웃
@@ -183,7 +193,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     //-----------------------------------------------------------------------
-    //----------------------------Rest Api function--------------------------
+    //                            Rest Api function
     //-----------------------------------------------------------------------
 
     private fun postgoogle(idToken: IdToken) {

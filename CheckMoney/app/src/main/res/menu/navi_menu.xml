@@ -2,11 +2,9 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <group android:checkableBehavior="single">
-
         <item android:id="@+id/add"
             android:icon="@drawable/ic_baseline_add_box_24"
-            android:title="통장 추가"
-            android:iconTint="@color/logoSkyBlue"/>
+            android:title="통장 추가" />
 
         <item android:id="@+id/test2"
             android:icon="@drawable/ic_baseline_menu_64"
