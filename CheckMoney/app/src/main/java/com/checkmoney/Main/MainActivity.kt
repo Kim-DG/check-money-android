@@ -5,21 +5,24 @@ import android.content.Intent
 import android.graphics.Point
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.text.Layout
+import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.graphics.Insets.add
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.navigation.NavigationView
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
     private val datas = mutableListOf<ProfileData>()
     private var mBackWait:Long = 0
+
     private lateinit var profileAdapter: ProfileAdapter
     private lateinit var layout_drawer: DrawerLayout
     private lateinit var nav_header: View
@@ -28,15 +31,32 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var btn_logout: TextView
     private lateinit var naviView: NavigationView
     private lateinit var text_email: TextView
+
+    private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var access_token: String
+    private lateinit var refresh_token: String
+    private lateinit var user_email: String
+
+    private val TAG = "MainActivity"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        //변수 초기화
         setVariable()
-        initRecycler()
+        //drawer layout 사이즈 조절
         setLayoutSize()
+        //구글 세팅
+        googleBuildIn()
+        //access token, refresh token, 사용자 이메일을 LoginActivity에서 받아옴
+        getExtraLogin()
+        //recycler항목 추가
+        initRecycler()
 
-        naviView.setNavigationItemSelectedListener(this)
+
+
+
+        naviView.setNavigationItemSelectedListener(this)// 네비게이션 메뉴 아이템에 클릭 속성 부여
         naviView.bringToFront()
 
         btn_navi.setOnClickListener {
@@ -45,14 +65,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         btn_logout.setOnClickListener {
             AppPref.prefs.clearUser(this)
+            googleSignOut()
             val loginIntent = Intent(this, LoginActivity::class.java)
             startActivity(loginIntent)
             finish()
 
-            naviView.setNavigationItemSelectedListener(this) // 네비게이션 메뉴 아이템에 클릭 속성 부여
         }
     }
 
+    //변수 초기화
     @SuppressLint("CutPasteId")
     private fun setVariable() {
         layout_drawer = findViewById(R.id.layout_drawer)
@@ -64,6 +85,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         text_email = nav_header.findViewById(R.id.text_email)
     }
 
+    //drawer layout 사이즈 조절
     private fun setLayoutSize() {
         val display = windowManager.defaultDisplay // in case of Activity
         val size = Point()
@@ -74,8 +96,30 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         naviView.layoutParams.width= width.toInt()
     }
 
+    //access token, refresh token, 사용자 이메일을 LoginActivity에서 받아옴
+    private fun getExtraLogin() {
+        val intent = getIntent()
+        access_token = intent.getStringExtra("access_token")!!
+        refresh_token = intent.getStringExtra("refresh_token")!!
+        user_email = intent.getStringExtra("userId")!!
+        text_email.text = user_email
+    }
 
-    override fun onNavigationItemSelected(item: MenuItem): Boolean { // 네비게이션 메뉴 아이템 클릭 시 수행
+    //recycler항목 추가
+    @SuppressLint("NotifyDataSetChanged")
+    private fun initRecycler() {
+        profileAdapter = ProfileAdapter(this)
+        rv_profile.adapter = profileAdapter
+
+        datas.apply {
+            add(ProfileData(name = "name"))
+            profileAdapter.datas = datas
+            profileAdapter.notifyDataSetChanged()
+        }
+    }
+
+    // 네비게이션 메뉴 아이템 클릭 시 수행
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.add -> Toast.makeText(applicationContext, "test1", Toast.LENGTH_SHORT).show()
             R.id.test2 -> Toast.makeText(applicationContext, "test2", Toast.LENGTH_SHORT).show()
@@ -85,6 +129,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return false
     }
 
+    //뒤로가기 두번클릭 시 앱 종료
     override fun onBackPressed() {
         if (System.currentTimeMillis() - mBackWait >= 2000) {
             mBackWait = System.currentTimeMillis()
@@ -96,15 +141,29 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    private fun initRecycler() {
-        profileAdapter = ProfileAdapter(this)
-        rv_profile.adapter = profileAdapter
+    //-----------------------------------------------------------------------
+    //                             Google Login
+    //-----------------------------------------------------------------------
+    //구글 세팅
+    private fun googleBuildIn() {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken("500159069581-m2dqev5jhbpumksnoodl7bmi90v5kjtl.apps.googleusercontent.com")
+            .requestEmail()
+            .build()
 
-        datas.apply {
-            add(ProfileData(name = "name"))
-            profileAdapter.datas = datas
-            profileAdapter.notifyDataSetChanged()
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
+    }
+    //구글이메일 로그아웃
+    private fun googleSignOut() { // 로그아웃
+        // Google sign out
+        googleSignInClient.signOut().addOnCompleteListener(this) {
+            //updateUI(null)
+            Log.d(TAG, "Logout success")
+            /*
+            googleSignInClient.revokeAccess().addOnCompleteListener(this){
+                Log.d(TAG, "revokeAccess success")
+            }
+            */
         }
     }
 }

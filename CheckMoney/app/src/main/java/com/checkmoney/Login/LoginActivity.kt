@@ -1,7 +1,6 @@
 package com.checkmoney
 
 import android.content.Intent
-import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
@@ -10,7 +9,7 @@ import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
+import com.checkmoney.Login.JoinPopupActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -18,11 +17,15 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 class LoginActivity : AppCompatActivity() {
+    private val gson = Gson()
+    private val type = object : TypeToken<ErrorResult>() {}.type
     //google client
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var btn_join: Button
@@ -33,6 +36,8 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var text_discorrect: TextView
     private lateinit var userId: String
     private lateinit var userPw: String
+    private lateinit var access_token: String
+    private lateinit var refresh_token: String
 
     private val RC_SIGN_IN = 99
     private val TAG = "LoginActivity"
@@ -46,14 +51,21 @@ class LoginActivity : AppCompatActivity() {
         setVariable()
         //id, pw입력
         checkInput()
-
+        //자동로그인
         autoLogin()
-
+        //구글로그인 세팅
         googleBuildIn()
 
         btn_join.setOnClickListener{
             val dialog = JoinPopupActivity(this@LoginActivity)
             dialog.start()
+        }
+
+        val gsa = GoogleSignIn.getLastSignedInAccount(this@LoginActivity)
+        if (gsa?.id != null) {
+            val idTokenClass = IdToken(id_token = gsa.idToken)
+            Log.d("TAG",gsa.email!!)
+            postGoogle(idTokenClass, gsa.email!!)
         }
 
         btn_login.setOnClickListener {
@@ -72,13 +84,9 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
+
         btn_signInButton.setOnClickListener {
-            val gsa = GoogleSignIn.getLastSignedInAccount(this@LoginActivity)
-            if (gsa?.id != null) {
-                val Intent = Intent(this, MainActivity::class.java)
-                startActivity(Intent)
-            }
-            else signIn()
+            GoogleSignIn()
         }
     }
 
@@ -89,7 +97,7 @@ class LoginActivity : AppCompatActivity() {
             handleSignInResult(task)
         }
     }
-
+    //변수 초기화
     private fun setVariable() {
         btn_join = findViewById(R.id.btn_join)
         btn_login = findViewById(R.id.btn_login)
@@ -99,7 +107,7 @@ class LoginActivity : AppCompatActivity() {
         text_discorrect = findViewById(R.id.text_discorrect)
     }
 
-    //자동으로 id,pw 입력
+    //자동로그인
     private fun autoLogin() {
         et_id.setText(AppPref.prefs.myId)
         et_pw.setText(AppPref.prefs.myPw)
@@ -113,7 +121,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    //입력한 id, pw 저장
+    //id, pw입력
     private fun checkInput(){
         et_id.addTextChangedListener(object: TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -132,16 +140,10 @@ class LoginActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
         })
     }
-
-    private fun updateUI() {
-        val Intent = Intent(this, MainActivity::class.java)
-        startActivity(Intent)
-    }
-
     //-----------------------------------------------------------------------
     //                             Google Login
     //-----------------------------------------------------------------------
-
+    //구글 세팅
     private fun googleBuildIn() {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken("500159069581-m2dqev5jhbpumksnoodl7bmi90v5kjtl.apps.googleusercontent.com")
@@ -151,6 +153,7 @@ class LoginActivity : AppCompatActivity() {
         googleSignInClient = GoogleSignIn.getClient(this, gso)
     }
 
+    //구글 로그인 세팅
     private fun handleSignInResult(task: Task<GoogleSignInAccount>?) {
         try{
             val account = task?.getResult(ApiException::class.java)
@@ -161,11 +164,10 @@ class LoginActivity : AppCompatActivity() {
                 Log.d(TAG,"Name = $name")
                 Log.d(TAG,"email = $email")
                 Log.d(TAG,"idToken = $idToken")
-                updateUI()
 
                 val idTokenClass = IdToken(id_token = idToken)
 
-                postgoogle(idTokenClass)
+                postGoogle(idTokenClass, email!!)
             }
 
         }catch (e: ApiException){
@@ -174,37 +176,30 @@ class LoginActivity : AppCompatActivity() {
     }
 
     //구글 로그인
-    private fun signIn() {
+    private fun GoogleSignIn() {
         val signInIntent = googleSignInClient.signInIntent
         startActivityForResult(signInIntent, RC_SIGN_IN)
-    }
-
-    private fun signOut() { // 로그아웃
-        // Google sign out
-        googleSignInClient.signOut().addOnCompleteListener(this) {
-        //updateUI(null)
-            Log.d(TAG, "Logout success")
-            /*
-            googleSignInClient.revokeAccess().addOnCompleteListener(this){
-                Log.d(TAG, "revokeAccess success")
-            }
-            */
-        }
     }
 
     //-----------------------------------------------------------------------
     //                            Rest Api function
     //-----------------------------------------------------------------------
 
-    private fun postgoogle(idToken: IdToken) {
+    private fun postGoogle(idToken: IdToken, email: String) {
         RetrofitBuild.api.postGoogle(idToken).enqueue(object : Callback<ResultAndToken>{
             override fun onResponse(call: Call<ResultAndToken>, response: Response<ResultAndToken>) {
-                if(response.isSuccessful) { // <--> response.code == 200
+                if(response.isSuccessful) {
                     Log.d(TAG2, "연결성공")
-                    val a: ResultAndToken = response.body()!!
-                    Log.d(TAG2,a.toString())
-                } else { // code == 400
-                    // 실패 처리
+                    val responseApi = response.body()!!
+                    Log.d(TAG2,responseApi.toString())
+                    val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
+                    mainIntent.putExtra("access_token", responseApi.token)
+                    mainIntent.putExtra("refresh_token",responseApi.refresh_token)
+                    mainIntent.putExtra("userId",email)
+                    startActivity(mainIntent)
+                } else {
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
                     Log.d(TAG2, "연결실패")
                 }
             }
@@ -221,20 +216,28 @@ class LoginActivity : AppCompatActivity() {
             override fun onResponse(call: Call<ResultAndToken>, response: Response<ResultAndToken>) {
                 if(response.isSuccessful) { // <--> response.code == 200
                     Log.d(TAG2, "연결성공")
-                    val a = response.body()
-                    Log.d(TAG2,a.toString())
-                    if(a?.result == "true") {
-                        AppPref.prefs.myId = userId
-                        AppPref.prefs.myPw = userPw
-                        val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
-                        startActivity(mainIntent)
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+                    if (responseApi != null) {
+                        if (responseApi.result) {
+                            Log.d(TAG2, "로그인 성공")
+                            AppPref.prefs.myId = userId
+                            AppPref.prefs.myPw = userPw
+                            val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
+                            mainIntent.putExtra("access_token", responseApi.token)
+                            mainIntent.putExtra("refresh_token",responseApi.refresh_token)
+                            mainIntent.putExtra("userId",userId)
+                            startActivity(mainIntent)
+                        }
                     }
-                    else
-                        text_discorrect.text = "아이디, 비밀번호가 일치하지 않습니다."
-                } else { // code == 400
-                    // 실패 처리
+                } else {
+                    val errorResponse: ErrorResult? = gson.fromJson(response.errorBody()!!.charStream(), type)
+                    Log.d(TAG2, errorResponse.toString())
                     Log.d(TAG2, "연결실패")
-                    text_discorrect.text = "아이디, 비밀번호가 일치하지 않습니다."
+                    when(errorResponse!!.code){
+                        40007 -> text_discorrect.text = "회원정보가 존재하지 않습니다."
+                        40008 -> text_discorrect.text = "아이디/비밀번호가 일치하지 않습니다."
+                    }
                 }
             }
             override fun onFailure(call: Call<ResultAndToken>, t: Throwable) { // code == 500

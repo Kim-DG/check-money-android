@@ -11,7 +11,6 @@ object RetrofitBuild {
 
     private val client: OkHttpClient = OkHttpClient.Builder() .addInterceptor(interceptor) .build()
 
-
     private var retrofit: Retrofit = Retrofit.Builder()
         .baseUrl("http://ec2-3-38-105-161.ap-northeast-2.compute.amazonaws.com:3001")
         .client(client)

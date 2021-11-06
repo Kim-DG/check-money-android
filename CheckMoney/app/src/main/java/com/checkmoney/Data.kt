@@ -5,16 +5,27 @@ data class Email(
 )
 
 data class IdToken(
-    var id_token: String
+    var id_token: String?
 )
 
 data class Result(
-    var result: String?
+    var result: Boolean,
+    var code: Int,
+    var message: String?
 )
 
 data class ResultAndToken(
-    var result: String?,
-    var token: String?
+    var result: Boolean,
+    var code: Int,
+    var message: String?,
+    var token: String?,
+    var refresh_token: String?
+)
+
+data class ErrorResult(
+    var result: Boolean,
+    var code: Int,
+    var message: String?
 )
 
 data class AuthConfirm(
