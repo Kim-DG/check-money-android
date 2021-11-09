@@ -1,6 +1,7 @@
 package com.checkmoney
 
 import android.content.Context
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +12,7 @@ class ProfileAdapter(private val context: Context) : RecyclerView.Adapter<Profil
 
     var datas = mutableListOf<ProfileData>()
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(context).inflate(R.layout.item_recycler,parent,false)
+        val view = LayoutInflater.from(context).inflate(R.layout.wallet_recycler,parent,false)
         return ViewHolder(view)
     }
 
@@ -27,6 +28,13 @@ class ProfileAdapter(private val context: Context) : RecyclerView.Adapter<Profil
 
         fun bind(item: ProfileData) {
             text_wname.text = item.name
+
+            itemView.setOnClickListener {
+                Intent(context, WalletActivity::class.java).apply {
+                    putExtra("data",item)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }.run { context.startActivity(this) }
+            }
         }
     }
 }

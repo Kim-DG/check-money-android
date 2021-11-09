@@ -1,7 +1,9 @@
 package com.checkmoney.Login
 
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
+import android.os.CountDownTimer
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -34,6 +36,8 @@ class JoinPopupActivity(context : Context): Dialog(context) {
     private lateinit var et_authNum: EditText
     private lateinit var text_authMessage: TextView
     private lateinit var text_authResult: TextView
+    private lateinit var text_timer: TextView
+    private lateinit var text_pwRegular: TextView
     private lateinit var text_pwConfirmCheck: TextView
     private lateinit var text_textJoinCheck: TextView
 
@@ -95,6 +99,8 @@ class JoinPopupActivity(context : Context): Dialog(context) {
         et_authNum = dlg.findViewById(R.id.et_auth)
         text_authMessage = dlg.findViewById(R.id.text_auth_message)
         text_authResult = dlg.findViewById(R.id.text_auth_result)
+        text_timer = dlg.findViewById(R.id.text_timer)
+        text_pwRegular = dlg.findViewById(R.id.text_pw_regular)
         text_pwConfirmCheck = dlg.findViewById(R.id.text_pw_confirm_result)
         text_textJoinCheck = dlg.findViewById(R.id.text_join_check)
     }
@@ -136,6 +142,18 @@ class JoinPopupActivity(context : Context): Dialog(context) {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 pw_first = et_pw.text.toString()
                 pw_check = et_pwConfirm.text.toString()
+                if(pw_first != ""){
+                    val regex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$@$!%*#?&])[A-Za-z\\d$@$!%*#?&]{8,}$".toRegex()
+                    if (!regex.containsMatchIn(pw_first)){
+                        text_pwRegular.text = "영문+숫자+특수문자를 포함하여 8자리 이상을 입력해 주세요."
+                    }
+                    else{
+                        text_pwRegular.text = ""
+                    }
+                }
+                else{
+                    text_pwRegular.text = ""
+                }
                 if(pw_check != "") {
                     if (pw_first == pw_check) {
                         text_pwConfirmCheck.setTextColor(
@@ -199,6 +217,31 @@ class JoinPopupActivity(context : Context): Dialog(context) {
         })
     }
 
+    private fun countDownTimer(){
+        object:CountDownTimer(300000,1){
+            @SuppressLint("SetTextI18n")
+            override fun onTick(millisUntilFinished: Long) {
+                if(auth_count == 0) {
+                    val time = millisUntilFinished / 1000
+                    val min = time / 60
+                    val sec = time % 60
+                    text_timer.text = "%02d".format(min) + ":" + "%02d".format(sec)
+                }
+                else{
+                    text_timer.text = ""
+                }
+            }
+
+            override fun onFinish() {
+                if(auth_count == 0) {
+                    text_timer.text = "시간만료"
+                }
+                else{
+                    text_timer.text = ""
+                }
+            }
+        }.start()
+    }
 
     //-----------------------------------------------------------------------
     //----------------------------Rest Api function--------------------------
@@ -212,6 +255,7 @@ class JoinPopupActivity(context : Context): Dialog(context) {
                     Log.d(TAG,responseApi.toString())
                     text_authMessage.setTextColor(ContextCompat.getColor(context, R.color.logoBlue))
                     text_authMessage.text = "인증번호전송"
+                    countDownTimer()
                 } else { // response 400
                     val errorResponse: ErrorResult? = gson.fromJson(response.errorBody()!!.charStream(), type)
                     Log.d(TAG2, errorResponse.toString())
@@ -256,8 +300,8 @@ class JoinPopupActivity(context : Context): Dialog(context) {
                     Log.d(TAG2, "연결실패")
                     text_authResult.setTextColor(ContextCompat.getColor(context, R.color.red))
                     when(errorResponse!!.code){
-                        40003 -> text_authResult.text = "인증번호 불일치"
-                        40004 -> text_authResult.text = "시간만료"
+                        40003 -> text_authResult.text = "인증번호가 일치하지 않습니다."
+                        40004 -> text_authResult.text = "인증시간을 초과하였습니다."
                         40005 -> text_authResult.text = "이메일을 입력한 후, 인증버튼을 눌러 주십시오."
                     }
                 }

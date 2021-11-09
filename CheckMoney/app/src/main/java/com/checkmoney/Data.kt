@@ -1,5 +1,8 @@
 package com.checkmoney
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
 data class Email(
     var email: String
 )
@@ -44,6 +47,6 @@ data class UserInfo(
     val password: String
 )
 
-data class ProfileData(
-    val name: String
-)
+@Parcelize
+data class ProfileData(var name: String): Parcelable {}
+

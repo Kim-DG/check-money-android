@@ -22,6 +22,6 @@ class MySharedPreferences(context: Context) {
         val prefs : SharedPreferences = context.getSharedPreferences(PREFS_FILENAME, Context.MODE_PRIVATE)
         val editor : SharedPreferences.Editor = prefs.edit()
         editor.clear()
-        editor.commit()
+        editor.apply()
     }
 }

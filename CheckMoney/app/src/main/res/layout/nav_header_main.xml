@@ -40,6 +40,7 @@
                     android:layout_marginStart="10dp"
                     android:text="test"
                     android:textSize="15sp"
+                    android:fontFamily="@font/spoqahansansneo_medium"
                     android:textColor="@color/white"/>
                 <TextView
                     android:id="@+id/text_logout"
@@ -47,6 +48,7 @@
                     android:layout_height="wrap_content"
                     android:text="LOGOUT"
                     android:textSize="20sp"
+                    android:fontFamily="@font/spoqahansansneo_medium"
                     android:textColor="@color/white"/>
             </LinearLayout>
         </LinearLayout>
@@ -56,7 +58,7 @@
             android:id="@+id/rv_profile"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:orientation="vertical"
-            tools:listitem="@layout/item_recycler"
+            tools:listitem="@layout/wallet_recycler"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"/>

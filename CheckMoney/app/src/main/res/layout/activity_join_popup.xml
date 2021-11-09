@@ -31,6 +31,7 @@
                 android:padding="20dp"
                 android:hint="Email"
                 android:textAlignment="textStart"
+                android:fontFamily="@font/spoqahansansneo_medium"
                 android:textColor="@color/black"
                 android:textColorHint="#D3D3D3"/>
             <Button
@@ -41,6 +42,7 @@
                 android:layout_marginLeft="10dp"
                 android:layout_marginBottom="10dp"
                 android:text="인증"
+                android:fontFamily="@font/spoqahansansneo_medium"
                 android:textColor="@color/logoBlue"
                 android:textAllCaps="false"
                 android:background="@drawable/button_design"/>
@@ -53,6 +55,7 @@
             android:layout_gravity="right"
             android:padding="10dp"
             android:text=""
+            android:fontFamily="@font/spoqahansansneo_medium"
             android:textColor="@color/logoBlue"
             android:textSize="12sp" />
 
@@ -68,6 +71,7 @@
                 android:padding="20dp"
                 android:hint="인증번호"
                 android:textAlignment="textStart"
+                android:fontFamily="@font/spoqahansansneo_medium"
                 android:textColor="@color/black"
                 android:textColorHint="#D3D3D3"/>
             <Button
@@ -77,22 +81,45 @@
                 android:layout_weight="0.8"
                 android:layout_marginLeft="10dp"
                 android:layout_marginBottom="10dp"
-
                 android:text="확인"
+                android:fontFamily="@font/spoqahansansneo_medium"
                 android:textColor="@color/logoBlue"
                 android:textAllCaps="false"
                 android:background="@drawable/button_design"/>
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/text_auth_result"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="right"
-            android:padding="10dp"
-            android:text=""
-            android:textColor="@color/logoBlue"
-            android:textSize="12sp" />
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/text_timer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:text=""
+                android:fontFamily="@font/spoqahansansneo_medium"
+                android:textColor="@color/red"
+                android:textSize="12sp" />
+            <TextView
+                android:id="@+id/empty2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:padding="10dp"
+                android:text=""
+                android:textColor="@color/logoBlue"
+                android:textSize="12sp" />
+            <TextView
+                android:id="@+id/text_auth_result"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:text=""
+                android:fontFamily="@font/spoqahansansneo_medium"
+                android:textColor="@color/logoBlue"
+                android:textSize="12sp" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -105,6 +132,7 @@
                 android:padding="20dp"
                 android:hint="별명"
                 android:textAlignment="textStart"
+                android:fontFamily="@font/spoqahansansneo_medium"
                 android:textColor="@color/black"
                 android:textColorHint="#D3D3D3"/>
         </LinearLayout>
@@ -118,8 +146,20 @@
             android:hint="Password"
             android:inputType="textPassword"
             android:textAlignment="textStart"
+            android:fontFamily="@font/spoqahansansneo_medium"
             android:textColor="@color/black"
             android:textColorHint="#D3D3D3"/>
+
+        <TextView
+            android:id="@+id/text_pw_regular"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:padding="10dp"
+            android:text=""
+            android:fontFamily="@font/spoqahansansneo_medium"
+            android:textColor="@color/red"
+            android:textSize="12sp" />
 
         <EditText
             android:id="@+id/et_password_check"
@@ -129,6 +169,7 @@
             android:hint="Confirm Password"
             android:inputType="textPassword"
             android:textAlignment="textStart"
+            android:fontFamily="@font/spoqahansansneo_medium"
             android:textColor="@color/black"
             android:textColorHint="#D3D3D3"/>
 
@@ -139,6 +180,7 @@
             android:layout_gravity="right"
             android:padding="10dp"
             android:text=""
+            android:fontFamily="@font/spoqahansansneo_medium"
             android:textColor="@color/red"
             android:textSize="12sp" />
 
@@ -153,6 +195,7 @@
                 android:layout_height="wrap_content"
                 android:padding="10dp"
                 android:text=""
+                android:fontFamily="@font/spoqahansansneo_medium"
                 android:textColor="@color/red"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -170,6 +213,7 @@
                 android:padding="15dp"
                 android:text="생성"
                 android:textSize="20sp"
+                android:fontFamily="@font/spoqahansansneo_medium"
                 android:textColor="@color/logoBlue"
                 android:background="#00ff0000">
             </Button>
@@ -182,6 +226,7 @@
                 android:padding="15dp"
                 android:text="취소"
                 android:textSize="20sp"
+                android:fontFamily="@font/spoqahansansneo_medium"
                 android:textColor="@color/logoBlue"
                 android:background="#00ff0000">
             </Button>
