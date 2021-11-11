@@ -1,6 +1,8 @@
 package com.checkmoney
 
 import android.annotation.SuppressLint
+import android.app.Dialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Point
 import androidx.appcompat.app.AppCompatActivity
@@ -8,12 +10,13 @@ import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
+import android.view.Window
+import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.RecyclerView
+import com.checkmoney.Login.JoinPopupActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -53,12 +56,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         //recycler항목 추가
         initRecycler()
 
-
-
-
-        naviView.setNavigationItemSelectedListener(this)// 네비게이션 메뉴 아이템에 클릭 속성 부여
-        naviView.bringToFront()
-
         btn_navi.setOnClickListener {
             layout_drawer.openDrawer(GravityCompat.START)
         }
@@ -82,6 +79,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         rv_profile = nav_header.findViewById(R.id.rv_profile)
         btn_logout = nav_header.findViewById(R.id.text_logout)
         text_email = nav_header.findViewById(R.id.text_email)
+
+        naviView.setNavigationItemSelectedListener(this)// 네비게이션 메뉴 아이템에 클릭 속성 부여
     }
 
     //drawer layout 사이즈 조절
@@ -107,7 +106,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     //recycler항목 추가
     @SuppressLint("NotifyDataSetChanged")
     private fun initRecycler() {
-        profileAdapter = ProfileAdapter(this)
+        profileAdapter = ProfileAdapter(this,access_token,refresh_token,user_email)
         rv_profile.adapter = profileAdapter
 
         datas.apply {
@@ -118,9 +117,33 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     // 네비게이션 메뉴 아이템 클릭 시 수행
+    @SuppressLint("NotifyDataSetChanged")
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
+
         when (item.itemId) {
-            R.id.add -> Toast.makeText(applicationContext, "test1", Toast.LENGTH_SHORT).show()
+            R.id.add -> {
+                val dlg = Dialog(this@MainActivity)
+                dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
+                dlg.setContentView(R.layout.wallet_create_dialog)     //다이얼로그에 사용할 xml 파일을 불러옴
+                dlg.show()
+
+                val et_wname = dlg.findViewById<EditText>(R.id.et_wname)
+                val btn_create = dlg.findViewById<Button>(R.id.btn_create)
+                val btn_cancle = dlg.findViewById<Button>(R.id.btn_cancel)
+
+                btn_create.setOnClickListener {
+                    datas.apply {
+                        add(ProfileData(name = "${et_wname?.text}"))
+                        profileAdapter.datas = datas
+                        profileAdapter.notifyDataSetChanged()
+                    }
+                    dlg.dismiss()
+                }
+
+                btn_cancle.setOnClickListener {
+                    dlg.dismiss()
+                }
+            }
             R.id.test2 -> Toast.makeText(applicationContext, "test2", Toast.LENGTH_SHORT).show()
             R.id.test3 -> Toast.makeText(applicationContext, "test3", Toast.LENGTH_SHORT).show()
         }

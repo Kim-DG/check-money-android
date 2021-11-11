@@ -193,7 +193,7 @@ class LoginActivity : AppCompatActivity() {
                     val responseApi = response.body()!!
                     Log.d(TAG2,responseApi.toString())
                     val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
-                    mainIntent.putExtra("access_token", responseApi.token)
+                    mainIntent.putExtra("access_token", responseApi.access_token)
                     mainIntent.putExtra("refresh_token",responseApi.refresh_token)
                     mainIntent.putExtra("userId",email)
                     startActivity(mainIntent)
@@ -224,7 +224,7 @@ class LoginActivity : AppCompatActivity() {
                             AppPref.prefs.myId = userId
                             AppPref.prefs.myPw = userPw
                             val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
-                            mainIntent.putExtra("access_token", responseApi.token)
+                            mainIntent.putExtra("access_token", responseApi.access_token)
                             mainIntent.putExtra("refresh_token",responseApi.refresh_token)
                             mainIntent.putExtra("userId",userId)
                             startActivity(mainIntent)

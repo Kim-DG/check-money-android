@@ -21,7 +21,7 @@ data class ResultAndToken(
     var result: Boolean,
     var code: Int,
     var message: String?,
-    var token: String?,
+    var access_token: String?,
     var refresh_token: String?
 )
 
@@ -49,4 +49,7 @@ data class UserInfo(
 
 @Parcelize
 data class ProfileData(var name: String): Parcelable {}
+
+@Parcelize
+data class MoneyProfileData(var detail: String, var price: Int, var category: String): Parcelable {}
 
