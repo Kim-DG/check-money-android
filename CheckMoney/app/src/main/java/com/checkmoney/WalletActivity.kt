@@ -19,11 +19,14 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.navigation.NavigationView
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.*
 
 class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
-    private val money_datas_list  = MoneyProfileDataList
+    private val money_datas_list = MoneyProfileDataList
 
     private lateinit var walletDatas: ProfileData
     private lateinit var money_profileAdapter: MoneyProfileAdapter
@@ -54,14 +57,9 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
     private var df = SimpleDateFormat("yyyy/MM")
     @SuppressLint("SimpleDateFormat")
     private var tf = SimpleDateFormat("yyyyMMddHHmmssSSZZ")
-    private var cal = Calendar.getInstance()
-    private var listType = 0
-
-    private val TOTAL = 0
-    private val EXPENSE = 1
-    private val INCOME = 2
 
     private val TAG = "WalletActivity"
+    private val TAG2 = "WalletActivity_API"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,52 +75,53 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         getExtraLogin()
         //recycler항목 추가
 
-        money_datas_list.datas.add(MoneyProfileData(date = Date(MoneyProfileData.DATE_TYPE,"2021","11","11",""), detail = "", positive = "positive", price = 0, category = ""))
-        money_datas_list.datas.add(MoneyProfileData(date = Date(MoneyProfileData.PRICE_TYPE,"2021","11","11", Calendar.getInstance().toString()), detail = "xx", positive = "positive", price = 100050, category = "xx"))
-        money_datas_list.datas = money_datas_list.datas.distinct().toMutableList()
-        money_datas_list.datas.sortWith(compareByDescending<MoneyProfileData>{it.date.year}.thenByDescending { it.date.month }.thenByDescending { it.date.day }.thenByDescending { it.date.type })
+        //money_datas_list.datas.add(MoneyProfileData(date = Date(MoneyProfileData.DATE_TYPE,"2021","11","11",""), detail = "", positive = "positive", price = 0, category = ""))
+       // money_datas_list.datas.add(MoneyProfileData(date = Date(MoneyProfileData.PRICE_TYPE,"2021","11","11", Calendar.getInstance().toString()), detail = "xx", positive = "positive", price = 100050, category = "xx"))
+        //money_datas_list.datas = money_datas_list.datas.distinct().toMutableList()
+       // money_datas_list.datas.sortWith(compareByDescending<MoneyProfileData>{it.date.year}.thenByDescending { it.date.month }.thenByDescending { it.date.day }.thenByDescending { it.date.type })
 
         initRecycler()
         //menu recyceler항목 추가
         menuRecycler()
 
-        btn_left.setOnClickListener {
-            if(cal.get(Calendar.MONTH) == 0) {
-                cal.add(Calendar.MONTH, 11)
-                cal.add(Calendar.YEAR, -1)
-            }
-            else{
-                cal.add(Calendar.MONTH, -1)
-            }
-            text_ym.text = df.format(cal.time)
-            btn_total.callOnClick()
-        }
-
-        btn_right.setOnClickListener {
-            if(cal.get(Calendar.MONTH) == 11) {
-                cal.add(Calendar.MONTH, -11)
-                cal.add(Calendar.YEAR, 1)
-            }
-            else{
-                cal.add(Calendar.MONTH, 1)
-            }
-            text_ym.text = df.format(cal.time)
-            btn_total.callOnClick()
-        }
-
         btn_total.setOnClickListener {
             btn_total.setTypeface(null, Typeface.BOLD)
             btn_expense.typeface = Typeface.DEFAULT
             btn_income.typeface = Typeface.DEFAULT
-            listType = TOTAL
+            ListType.listype = ListType.TOTAL
             initRecycler()
+        }
+
+        btn_left.setOnClickListener {
+            if(ThisTime.cal.get(Calendar.MONTH) == 0) {
+                ThisTime.cal.add(Calendar.MONTH, 11)
+                ThisTime.cal.add(Calendar.YEAR, -1)
+            }
+            else{
+                ThisTime.cal.add(Calendar.MONTH, -1)
+            }
+            text_ym.text = df.format(ThisTime.cal.time)
+            Log.d("@@@@@@@@@@@@@@@@@@@@@", ThisTime.cal.get(Calendar.MONTH).toString())
+            btn_total.callOnClick()
+        }
+
+        btn_right.setOnClickListener {
+            if(ThisTime.cal.get(Calendar.MONTH) == 11) {
+                ThisTime.cal.add(Calendar.MONTH, -11)
+                ThisTime.cal.add(Calendar.YEAR, 1)
+            }
+            else{
+                ThisTime.cal.add(Calendar.MONTH, 1)
+            }
+            text_ym.text = df.format(ThisTime.cal.time)
+            btn_total.callOnClick()
         }
 
         btn_expense.setOnClickListener {
             btn_total.typeface = Typeface.DEFAULT
             btn_expense.setTypeface(null, Typeface.BOLD)
             btn_income.typeface = Typeface.DEFAULT
-            listType = EXPENSE
+            ListType.listype = ListType.EXPENSE
             expenseInitRecycler()
         }
 
@@ -130,7 +129,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
             btn_total.typeface = Typeface.DEFAULT
             btn_expense.typeface = Typeface.DEFAULT
             btn_income.setTypeface(null, Typeface.BOLD)
-            listType = INCOME
+            ListType.listype = ListType.INCOME
             incomeInitRecycler()
         }
 
@@ -149,6 +148,8 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
             startActivity(loginIntent)
             finish()
         }
+
+        btn_total.callOnClick()
     }
 
     //변수 초기화 및 세팅
@@ -170,12 +171,14 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         text_ym = findViewById(R.id.text_ym)
         text_email = nav_header.findViewById(R.id.text_email)
 
-        text_ym.text = df.format(cal.time)
+        text_ym.text = df.format(ThisTime.cal.time)
         walletDatas = intent.getParcelableExtra("data")!!
-        btn_total.setTypeface(null, Typeface.BOLD)
-        text_wname.text = walletDatas.name
-        cal.time = Date()
+        text_wname.text = walletDatas.title
+        ThisTime.cal.time = Date()
         naviView.setNavigationItemSelectedListener(this)// 네비게이션 메뉴 아이템에 클릭 속성 부여
+
+        SpinnerArray.sData = resources.getStringArray(R.array.category)
+        SpinnerArray.sData2 = resources.getStringArray(R.array.price)
 
         money_profileAdapter = MoneyProfileAdapter(this)
         money_rv_profile.adapter = money_profileAdapter
@@ -219,7 +222,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
     private fun initRecycler() {
         money_datas_list.datas.apply {
             val total_datas_list = money_datas_list.datas.distinctBy { MoneyProfileData -> MoneyProfileData.date}
-            val filterDatas = total_datas_list.filter{(it.date.month == (cal.get(Calendar.MONTH)+1).toString()) && (it.date.year == (cal.get(Calendar.YEAR).toString()))}.toMutableList()
+            val filterDatas = total_datas_list.filter{(it.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.year == (ThisTime.cal.get(Calendar.YEAR).toString()))}.toMutableList()
             money_profileAdapter.datas = filterDatas
             money_profileAdapter.notifyDataSetChanged()
         }
@@ -229,7 +232,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
     @SuppressLint("NotifyDataSetChanged")
     private fun incomeInitRecycler() {
         money_datas_list.datas.apply {
-            val filterDatas = (money_datas_list.datas.filter{(it.date.month == (cal.get(Calendar.MONTH)+1).toString()) && (it.date.year == (cal.get(Calendar.YEAR).toString())) && (it.positive == "positive")}).toMutableList()
+            val filterDatas = (money_datas_list.datas.filter{(it.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.year == (ThisTime.cal.get(Calendar.YEAR).toString())) && (it.positive == "positive")}).toMutableList()
             money_profileAdapter.datas = filterDatas
             money_profileAdapter.notifyDataSetChanged()
         }
@@ -239,7 +242,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
     @SuppressLint("NotifyDataSetChanged")
     private fun expenseInitRecycler() {
         money_datas_list.datas.apply {
-            val filterDatas = (money_datas_list.datas.filter{(it.date.month == (cal.get(Calendar.MONTH)+1).toString()) && (it.date.year == (cal.get(Calendar.YEAR).toString())) && (it.positive == "negative")}).toMutableList()
+            val filterDatas = (money_datas_list.datas.filter{(it.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.year == (ThisTime.cal.get(Calendar.YEAR).toString())) && (it.positive == "negative")}).toMutableList()
             money_profileAdapter.datas = filterDatas
             money_profileAdapter.notifyDataSetChanged()
         }
@@ -264,12 +267,11 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         val month : NumberPicker = dlg.findViewById(R.id.monthpicker_datepicker)
         val day : NumberPicker = dlg.findViewById(R.id.daypicker_datepicker)
 
-        val sData = resources.getStringArray(R.array.category)
-        val adapter = ArrayAdapter(this, android.R.layout.simple_expandable_list_item_1, sData)
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_expandable_list_item_1, SpinnerArray.sData)
         spinner.adapter = adapter
 
-        val sData2 = resources.getStringArray(R.array.price)
-        val adapter2 = ArrayAdapter(this,android.R.layout.simple_expandable_list_item_1, sData2)
+        val adapter2 = ArrayAdapter(this,android.R.layout.simple_expandable_list_item_1, SpinnerArray.sData2)
         spinner2.adapter = adapter2
 
         year.wrapSelectorWheel = false
@@ -291,7 +293,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
 
         val c = System.currentTimeMillis()
         val a = Date(c)
-        var time = tf.format(a)
+        val time = tf.format(a)
 
         spinner.setSelection(1)
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
@@ -301,7 +303,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
                 position: Int,
                 id: Long
             ) {
-                category = sData[position]
+                category = SpinnerArray.sData[position]
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -317,7 +319,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
                 position: Int,
                 id: Long
             ) {
-                if(sData2[position] == "지출"){
+                if(SpinnerArray.sData2[position] == "지출"){
                     positive = "negative"
                 }
                 else
@@ -355,10 +357,11 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
                                 String.format("%02d", day.value),
                                 time
                             ), detail = et_detail.text.toString(), positive = positive,
-                            price = et_price.text.toString().toInt(), category = category
+                            price = et_price.text.toString().toLong(), category = category
                         )
                     )
                 }
+                Log.d("!!!!!!!!!!!!!!!424124124",MoneyProfileDataList.datas.toString())
                 money_datas_list.datas = money_datas_list.datas.distinct().toMutableList()
                 money_datas_list.datas.sortWith(compareByDescending<MoneyProfileData> { it.date.year }.thenByDescending { it.date.month }
                     .thenByDescending { it.date.day }.thenByDescending { it.date.type })
@@ -372,7 +375,6 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
             dlg.dismiss()
         }
     }
-
 
     // 네비게이션 메뉴 아이템 클릭 시 수행
     @SuppressLint("NotifyDataSetChanged")
@@ -390,7 +392,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
 
                 btn_create.setOnClickListener {
                     ProfileDataList.datas.apply {
-                        add(ProfileData(name = "${et_wname?.text}"))
+                        add(ProfileData(title = "${et_wname?.text}",id = -1))
                         profileAdapter.datas = ProfileDataList.datas
                         profileAdapter.notifyDataSetChanged()
                         Log.d("!!!!!!!!!!!!!!!!!!!!",ProfileDataList.datas.toString())
@@ -431,5 +433,68 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
             }
             */
         }
+    }
+
+    //-----------------------------------------------------------------------
+    //                            Rest Api function
+    //-----------------------------------------------------------------------
+
+    private fun postAccount(account: Account) {
+        RetrofitBuild.api.postAccount(access_token, account).enqueue(object :
+            Callback<ResultAccount> {
+            override fun onResponse(call: Call<ResultAccount>, response: Response<ResultAccount>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+                } else { // code == 400
+                    Log.d(TAG2, "연결실패")
+                }
+            }
+            override fun onFailure(call: Call<ResultAccount>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
+    private fun putAccount(accountId: Int, account: Account) {
+        RetrofitBuild.api.putAccount(access_token, accountId, account).enqueue(object :
+            Callback<Result> {
+            override fun onResponse(call: Call<Result>, response: Response<Result>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+                } else { // code == 400
+                    Log.d(TAG2, "연결실패")
+                }
+            }
+            override fun onFailure(call: Call<Result>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
+    private fun deleteAccount(accountId: Int) {
+        RetrofitBuild.api.deleteAccount(access_token, accountId).enqueue(object : Callback<Result> {
+            override fun onResponse(call: Call<Result>, response: Response<Result>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+                } else { // code == 400
+                    Log.d(TAG2, "연결실패")
+                }
+            }
+            override fun onFailure(call: Call<Result>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
     }
 }

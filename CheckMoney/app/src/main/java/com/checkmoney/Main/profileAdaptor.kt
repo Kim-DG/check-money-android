@@ -38,7 +38,7 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
 
         @SuppressLint("NotifyDataSetChanged")
         fun bind(item: ProfileData) {
-            text_wname.text = item.name
+            text_wname.text = item.title
 
             text_wname.setOnClickListener {
                 Intent(context, WalletActivity::class.java).apply {
@@ -63,7 +63,7 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
 
                 btn_edit.setOnClickListener {
                     text_wname.text = "${et_editname?.text}"
-                    item.name = "${et_editname?.text}"
+                    item.title = "${et_editname?.text}"
                     dlg.dismiss()
                 }
 

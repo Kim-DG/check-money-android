@@ -15,6 +15,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <ImageView
+            android:id="@+id/img_logo"
+            android:layout_width="184.2dp"
+            android:layout_height="45.6dp"
+            android:layout_gravity="center"
+            android:background="@drawable/text_logo"/>
+
         <EditText
             android:id="@+id/et_wname"
             android:layout_width="match_parent"

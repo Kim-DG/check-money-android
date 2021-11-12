@@ -21,6 +21,11 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.navigation.NavigationView
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
     private var mBackWait:Long = 0
@@ -40,6 +45,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var user_email: String
 
     private val TAG = "MainActivity"
+    private val TAG2 = "MainActivity_API"
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +61,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         getExtraLogin()
         //recycler항목 추가
         initRecycler()
+
+        getAccount()
 
         btn_navi.setOnClickListener {
             layout_drawer.openDrawer(GravityCompat.START)
@@ -112,7 +120,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         rv_profile.adapter = profileAdapter
 
         ProfileDataList.datas.apply {
-            add(ProfileData(name = "name"))
+            add(ProfileData(title = "name", id = 0))
             Log.d(TAG,"Profile Data list" + ProfileDataList.datas.toString())
             profileAdapter.datas = ProfileDataList.datas
             profileAdapter.notifyDataSetChanged()
@@ -135,8 +143,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val btn_cancle = dlg.findViewById<Button>(R.id.btn_cancel)
 
                 btn_create.setOnClickListener {
+                    val account = Account(title = et_wname?.text.toString(), description = "aa")
+                    postAccount(account)
                     ProfileDataList.datas.apply {
-                        add(ProfileData(name = "${et_wname?.text}"))
+                        add(ProfileData(title = "${et_wname?.text}", id = 0))
                         profileAdapter.datas = ProfileDataList.datas
                         profileAdapter.notifyDataSetChanged()
                     }
@@ -188,5 +198,87 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
             */
         }
+    }
+
+    //-----------------------------------------------------------------------
+    //                            Rest Api function
+    //-----------------------------------------------------------------------
+
+    private fun getAccount() {
+        RetrofitBuild.api.getAccount(access_token).enqueue(object : Callback<ResultAccountList> {
+            override fun onResponse(call: Call<ResultAccountList>, response: Response<ResultAccountList>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+                } else { // code == 400
+                    //val errorResponse: ErrorResult? = gson.fromJson(response.errorBody()!!.charStream(), type)
+                    //Log.d(TAG2, errorResponse.toString())
+                    Log.d(TAG2, "연결실패")
+                }
+            }
+            override fun onFailure(call: Call<ResultAccountList>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
+    private fun postAccount(account: Account) {
+        RetrofitBuild.api.postAccount(access_token, account).enqueue(object : Callback<ResultAccount> {
+            override fun onResponse(call: Call<ResultAccount>, response: Response<ResultAccount>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+                } else { // code == 400
+                    Log.d(TAG2, "연결실패")
+                }
+            }
+            override fun onFailure(call: Call<ResultAccount>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
+    private fun putAccount(accountId: Int, account: Account) {
+        RetrofitBuild.api.putAccount(access_token, accountId, account).enqueue(object : Callback<Result> {
+            override fun onResponse(call: Call<Result>, response: Response<Result>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+                } else { // code == 400
+                    Log.d(TAG2, "연결실패")
+                }
+            }
+            override fun onFailure(call: Call<Result>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
+    private fun deleteAccount(accountId: Int) {
+        RetrofitBuild.api.deleteAccount(access_token, accountId).enqueue(object : Callback<Result> {
+            override fun onResponse(call: Call<Result>, response: Response<Result>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+                } else { // code == 400
+                    Log.d(TAG2, "연결실패")
+                }
+            }
+            override fun onFailure(call: Call<Result>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
     }
 }
