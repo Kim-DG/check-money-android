@@ -11,6 +11,7 @@ import android.view.Window
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.RecyclerView
 
 class ProfileAdapter(private val context: Context, private val access_token: String, private val refresh_token: String, private val user_email: String) : RecyclerView.Adapter<ProfileAdapter.ViewHolder>() {
@@ -41,6 +42,7 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
 
             text_wname.setOnClickListener {
                 Intent(context, WalletActivity::class.java).apply {
+                    MoneyProfileDataList.datas.clear()
                     putExtra("data",item)
                     putExtra("access_token",access_token)
                     putExtra("refresh_token",refresh_token)

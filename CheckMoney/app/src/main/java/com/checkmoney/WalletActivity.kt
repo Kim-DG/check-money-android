@@ -5,7 +5,6 @@ import android.app.Dialog
 import android.content.Intent
 import android.graphics.Point
 import android.graphics.Typeface
-import android.graphics.fonts.FontFamily
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -20,13 +19,11 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.navigation.NavigationView
-import java.lang.reflect.Type
 import java.text.SimpleDateFormat
 import java.util.*
 
 class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
-    private val money_datas = mutableListOf<MoneyProfileData>()
-    private val datas = mutableListOf<ProfileData>()
+    private val money_datas_list  = MoneyProfileDataList
 
     private lateinit var walletDatas: ProfileData
     private lateinit var money_profileAdapter: MoneyProfileAdapter
@@ -43,6 +40,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
     private lateinit var btn_expense: TextView
     private lateinit var btn_income: TextView
     private lateinit var btn_navi: ImageView
+    private lateinit var btn_add: Button
     private lateinit var text_ym: TextView
     private lateinit var text_email: TextView
     private lateinit var naviView: NavigationView
@@ -54,6 +52,8 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
 
     @SuppressLint("SimpleDateFormat")
     private var df = SimpleDateFormat("yyyy/MM")
+    @SuppressLint("SimpleDateFormat")
+    private var tf = SimpleDateFormat("yyyyMMddHHmmssSSZZ")
     private var cal = Calendar.getInstance()
     private var listType = 0
 
@@ -76,13 +76,18 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         //access token, refresh token, 사용자 이메일을 LoginActivity에서 받아옴
         getExtraLogin()
         //recycler항목 추가
+
+        money_datas_list.datas.add(MoneyProfileData(date = Date(MoneyProfileData.DATE_TYPE,"2021","11","11",""), detail = "", positive = "positive", price = 0, category = ""))
+        money_datas_list.datas.add(MoneyProfileData(date = Date(MoneyProfileData.PRICE_TYPE,"2021","11","11", Calendar.getInstance().toString()), detail = "xx", positive = "positive", price = 100050, category = "xx"))
+        money_datas_list.datas = money_datas_list.datas.distinct().toMutableList()
+        money_datas_list.datas.sortWith(compareByDescending<MoneyProfileData>{it.date.year}.thenByDescending { it.date.month }.thenByDescending { it.date.day }.thenByDescending { it.date.type })
+
         initRecycler()
         //menu recyceler항목 추가
         menuRecycler()
 
-
         btn_left.setOnClickListener {
-            if(cal.get(Calendar.MONTH) == 1) {
+            if(cal.get(Calendar.MONTH) == 0) {
                 cal.add(Calendar.MONTH, 11)
                 cal.add(Calendar.YEAR, -1)
             }
@@ -90,10 +95,11 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
                 cal.add(Calendar.MONTH, -1)
             }
             text_ym.text = df.format(cal.time)
+            btn_total.callOnClick()
         }
 
         btn_right.setOnClickListener {
-            if(cal.get(Calendar.MONTH) == 12) {
+            if(cal.get(Calendar.MONTH) == 11) {
                 cal.add(Calendar.MONTH, -11)
                 cal.add(Calendar.YEAR, 1)
             }
@@ -101,6 +107,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
                 cal.add(Calendar.MONTH, 1)
             }
             text_ym.text = df.format(cal.time)
+            btn_total.callOnClick()
         }
 
         btn_total.setOnClickListener {
@@ -108,6 +115,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
             btn_expense.typeface = Typeface.DEFAULT
             btn_income.typeface = Typeface.DEFAULT
             listType = TOTAL
+            initRecycler()
         }
 
         btn_expense.setOnClickListener {
@@ -115,6 +123,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
             btn_expense.setTypeface(null, Typeface.BOLD)
             btn_income.typeface = Typeface.DEFAULT
             listType = EXPENSE
+            expenseInitRecycler()
         }
 
         btn_income.setOnClickListener {
@@ -122,6 +131,11 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
             btn_expense.typeface = Typeface.DEFAULT
             btn_income.setTypeface(null, Typeface.BOLD)
             listType = INCOME
+            incomeInitRecycler()
+        }
+
+        btn_add.setOnClickListener {
+            addDetail()
         }
 
         btn_navi.setOnClickListener {
@@ -137,6 +151,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         }
     }
 
+    //변수 초기화 및 세팅
     private fun setVariable() {
         layout_drawer = findViewById(R.id.layout_drawer)
         naviView = findViewById(R.id.naviView)
@@ -151,15 +166,23 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         btn_expense = findViewById(R.id.btn_expense)
         btn_income = findViewById(R.id.btn_income)
         btn_navi = findViewById(R.id.btn_navi)
+        btn_add = findViewById(R.id.btn_add)
         text_ym = findViewById(R.id.text_ym)
         text_email = nav_header.findViewById(R.id.text_email)
 
+        text_ym.text = df.format(cal.time)
         walletDatas = intent.getParcelableExtra("data")!!
+        btn_total.setTypeface(null, Typeface.BOLD)
         text_wname.text = walletDatas.name
         cal.time = Date()
         naviView.setNavigationItemSelectedListener(this)// 네비게이션 메뉴 아이템에 클릭 속성 부여
+
+        money_profileAdapter = MoneyProfileAdapter(this)
+        money_rv_profile.adapter = money_profileAdapter
     }
 
+
+    //token과 유저정보 가져옴
     private fun getExtraLogin() {
         access_token = intent.getStringExtra("access_token")!!
         refresh_token = intent.getStringExtra("refresh_token")!!
@@ -178,30 +201,178 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         naviView.layoutParams.width= width.toInt()
     }
 
+    //통장목록표시
     @SuppressLint("NotifyDataSetChanged")
     private fun menuRecycler() {
         profileAdapter = ProfileAdapter(this,access_token,refresh_token,user_email)
         rv_profile.adapter = profileAdapter
 
-        datas.apply {
-            add(ProfileData(name = "name"))
-            profileAdapter.datas = datas
+        ProfileDataList.datas.apply {
+            Log.d(TAG,"Profile Data list" + ProfileDataList.datas.toString())
+            profileAdapter.datas = ProfileDataList.datas
             profileAdapter.notifyDataSetChanged()
         }
     }
 
-    //recycler항목 추가
+    //recycler항목 추가, 전체내역표시
     @SuppressLint("NotifyDataSetChanged")
     private fun initRecycler() {
-        money_profileAdapter = MoneyProfileAdapter(this)
-        money_rv_profile.adapter = money_profileAdapter
-
-        money_datas.apply {
-            add(MoneyProfileData(detail = "zz", price = 10000, category = "zz"))
-            money_profileAdapter.datas = money_datas
+        money_datas_list.datas.apply {
+            val total_datas_list = money_datas_list.datas.distinctBy { MoneyProfileData -> MoneyProfileData.date}
+            val filterDatas = total_datas_list.filter{(it.date.month == (cal.get(Calendar.MONTH)+1).toString()) && (it.date.year == (cal.get(Calendar.YEAR).toString()))}.toMutableList()
+            money_profileAdapter.datas = filterDatas
             money_profileAdapter.notifyDataSetChanged()
         }
     }
+
+    //수입내역표시
+    @SuppressLint("NotifyDataSetChanged")
+    private fun incomeInitRecycler() {
+        money_datas_list.datas.apply {
+            val filterDatas = (money_datas_list.datas.filter{(it.date.month == (cal.get(Calendar.MONTH)+1).toString()) && (it.date.year == (cal.get(Calendar.YEAR).toString())) && (it.positive == "positive")}).toMutableList()
+            money_profileAdapter.datas = filterDatas
+            money_profileAdapter.notifyDataSetChanged()
+        }
+    }
+
+    //지출내역표시
+    @SuppressLint("NotifyDataSetChanged")
+    private fun expenseInitRecycler() {
+        money_datas_list.datas.apply {
+            val filterDatas = (money_datas_list.datas.filter{(it.date.month == (cal.get(Calendar.MONTH)+1).toString()) && (it.date.year == (cal.get(Calendar.YEAR).toString())) && (it.positive == "negative")}).toMutableList()
+            money_profileAdapter.datas = filterDatas
+            money_profileAdapter.notifyDataSetChanged()
+        }
+    }
+
+    //사용내역추가
+    private fun addDetail() {
+        val dlg = Dialog(this@WalletActivity)
+        dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
+        dlg.setContentView(R.layout.dialog_datepicker)     //다이얼로그에 사용할 xml 파일을 불러옴
+        dlg.show()
+
+        val et_detail = dlg.findViewById<EditText>(R.id.et_detail)
+        val et_price = dlg.findViewById<EditText>(R.id.et_price)
+        val btn_choice = dlg.findViewById<Button>(R.id.btn_choice)
+        val btn_cancle = dlg.findViewById<Button>(R.id.btn_cancel)
+        val spinner = dlg.findViewById<Spinner>(R.id.spinner)
+        val spinner2 = dlg.findViewById<Spinner>(R.id.spinner2)
+        val text_alarm = dlg.findViewById<TextView>(R.id.text_alarm)
+
+        val year : NumberPicker = dlg.findViewById(R.id.yearpicker_datepicker)
+        val month : NumberPicker = dlg.findViewById(R.id.monthpicker_datepicker)
+        val day : NumberPicker = dlg.findViewById(R.id.daypicker_datepicker)
+
+        val sData = resources.getStringArray(R.array.category)
+        val adapter = ArrayAdapter(this, android.R.layout.simple_expandable_list_item_1, sData)
+        spinner.adapter = adapter
+
+        val sData2 = resources.getStringArray(R.array.price)
+        val adapter2 = ArrayAdapter(this,android.R.layout.simple_expandable_list_item_1, sData2)
+        spinner2.adapter = adapter2
+
+        year.wrapSelectorWheel = false
+        month.wrapSelectorWheel = false
+        day.wrapSelectorWheel = false
+
+        //  최소값 설정
+        year.minValue = 2021
+        month.minValue = 1
+        day.minValue = 1
+
+        //  최대값 설정
+        year.maxValue = 2025
+        month.maxValue = 12
+        day.maxValue = 31
+
+        var positive = ""
+        var category = ""
+
+        val c = System.currentTimeMillis()
+        val a = Date(c)
+        var time = tf.format(a)
+
+        spinner.setSelection(1)
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                category = sData[position]
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                TODO("Not yet implemented")
+            }
+        }
+
+        spinner2.setSelection(1)
+        spinner2.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                if(sData2[position] == "지출"){
+                    positive = "negative"
+                }
+                else
+                    positive = "positive"
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                TODO("Not yet implemented")
+            }
+        }
+        btn_choice.setOnClickListener {
+            if(et_detail.text.toString() == "" || et_price.text.toString() == ""){
+                text_alarm.text = "사용내역과 금액을 입력해 주세요."
+            }
+            else {
+                money_datas_list.datas.apply {
+                    add(
+                        MoneyProfileData(
+                            date = Date(
+                                MoneyProfileData.DATE_TYPE,
+                                String.format("%02d", year.value),
+                                String.format("%02d", month.value),
+                                String.format("%02d", day.value),
+                                ""
+                            ), detail = "", positive = positive,
+                            price = 0, category = ""
+                        )
+                    )
+                    add(
+                        MoneyProfileData(
+                            date = Date(
+                                MoneyProfileData.PRICE_TYPE,
+                                String.format("%02d", year.value),
+                                String.format("%02d", month.value),
+                                String.format("%02d", day.value),
+                                time
+                            ), detail = et_detail.text.toString(), positive = positive,
+                            price = et_price.text.toString().toInt(), category = category
+                        )
+                    )
+                }
+                money_datas_list.datas = money_datas_list.datas.distinct().toMutableList()
+                money_datas_list.datas.sortWith(compareByDescending<MoneyProfileData> { it.date.year }.thenByDescending { it.date.month }
+                    .thenByDescending { it.date.day }.thenByDescending { it.date.type })
+                btn_total.callOnClick()
+                dlg.dismiss()
+                text_alarm.text = ""
+            }
+        }
+
+        btn_cancle.setOnClickListener {
+            dlg.dismiss()
+        }
+    }
+
 
     // 네비게이션 메뉴 아이템 클릭 시 수행
     @SuppressLint("NotifyDataSetChanged")
@@ -218,14 +389,14 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
                 val btn_cancle = dlg.findViewById<Button>(R.id.btn_cancel)
 
                 btn_create.setOnClickListener {
-                    datas.apply {
+                    ProfileDataList.datas.apply {
                         add(ProfileData(name = "${et_wname?.text}"))
-                        profileAdapter.datas = datas
+                        profileAdapter.datas = ProfileDataList.datas
                         profileAdapter.notifyDataSetChanged()
+                        Log.d("!!!!!!!!!!!!!!!!!!!!",ProfileDataList.datas.toString())
                     }
                     dlg.dismiss()
                 }
-
                 btn_cancle.setOnClickListener {
                     dlg.dismiss()
                 }
@@ -233,7 +404,6 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
             R.id.test2 -> Toast.makeText(applicationContext, "test2", Toast.LENGTH_SHORT).show()
             R.id.test3 -> Toast.makeText(applicationContext, "test3", Toast.LENGTH_SHORT).show()
         }
-        layout_drawer.closeDrawers() //네비게이션 뷰 닫기
         return false
     }
 

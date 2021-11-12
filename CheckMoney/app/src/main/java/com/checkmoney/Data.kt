@@ -51,5 +51,21 @@ data class UserInfo(
 data class ProfileData(var name: String): Parcelable {}
 
 @Parcelize
-data class MoneyProfileData(var detail: String, var price: Int, var category: String): Parcelable {}
+data class MoneyProfileData(var date: Date, var detail: String, var positive: String, var price: Int?, var category: String): Parcelable {
+    companion object {
+        const val PRICE_TYPE = 0
+        const val DATE_TYPE = 1
+    }
+}
+@Parcelize
+data class Date(var type: Int, var year: String, var month: String, var day: String, var time: String): Parcelable{}
+
+
+object MoneyProfileDataList{
+    var datas: MutableList<MoneyProfileData> = mutableListOf()
+}
+
+object ProfileDataList{
+    var datas: MutableList<ProfileData> = mutableListOf()
+}
 

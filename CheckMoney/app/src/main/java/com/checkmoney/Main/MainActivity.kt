@@ -23,7 +23,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.navigation.NavigationView
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
-    private val datas = mutableListOf<ProfileData>()
     private var mBackWait:Long = 0
 
     private lateinit var profileAdapter: ProfileAdapter
@@ -41,6 +40,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var user_email: String
 
     private val TAG = "MainActivity"
+    @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -58,6 +58,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         btn_navi.setOnClickListener {
             layout_drawer.openDrawer(GravityCompat.START)
+            profileAdapter.datas = ProfileDataList.datas
+            profileAdapter.notifyDataSetChanged()
         }
 
         btn_logout.setOnClickListener {
@@ -109,9 +111,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         profileAdapter = ProfileAdapter(this,access_token,refresh_token,user_email)
         rv_profile.adapter = profileAdapter
 
-        datas.apply {
+        ProfileDataList.datas.apply {
             add(ProfileData(name = "name"))
-            profileAdapter.datas = datas
+            Log.d(TAG,"Profile Data list" + ProfileDataList.datas.toString())
+            profileAdapter.datas = ProfileDataList.datas
             profileAdapter.notifyDataSetChanged()
         }
     }
@@ -132,14 +135,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val btn_cancle = dlg.findViewById<Button>(R.id.btn_cancel)
 
                 btn_create.setOnClickListener {
-                    datas.apply {
+                    ProfileDataList.datas.apply {
                         add(ProfileData(name = "${et_wname?.text}"))
-                        profileAdapter.datas = datas
+                        profileAdapter.datas = ProfileDataList.datas
                         profileAdapter.notifyDataSetChanged()
                     }
                     dlg.dismiss()
                 }
-
                 btn_cancle.setOnClickListener {
                     dlg.dismiss()
                 }
@@ -147,7 +149,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.test2 -> Toast.makeText(applicationContext, "test2", Toast.LENGTH_SHORT).show()
             R.id.test3 -> Toast.makeText(applicationContext, "test3", Toast.LENGTH_SHORT).show()
         }
-        layout_drawer.closeDrawers() //네비게이션 뷰 닫기
         return false
     }
 
