@@ -244,7 +244,7 @@ class JoinPopupActivity(context : Context): Dialog(context) {
     }
 
     //-----------------------------------------------------------------------
-    //----------------------------Rest Api function--------------------------
+    //                           Rest Api function
     //-----------------------------------------------------------------------
     private fun postEmail(email: Email) {
         RetrofitBuild.api.postEmail(email).enqueue(object : Callback<Result>{

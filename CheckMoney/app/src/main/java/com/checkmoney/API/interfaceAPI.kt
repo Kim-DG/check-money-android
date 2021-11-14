@@ -23,15 +23,15 @@ interface API{
     @POST("api/auth/refresh")
     fun postRefresh(@Body refreshToken: RefreshToken): Call<ResultAndToken>
 
-    @GET("accounts")
-    fun getAccount(@Header("access_token") access_token: String): Call<ResultAccountList>
+    @GET("api/accounts")
+    fun getAccount(@Header("Authorization") Authorization: String): Call<ResultAccountList>
 
-    @POST("accounts")
+    @POST("api/accounts")
     fun postAccount(@Header("access_token") access_token: String, @Body account: Account): Call<ResultAccount>
 
-    @PUT("accounts/{accountId}")
+    @PUT("api/accounts/{accountId}")
     fun putAccount(@Header("access_token") access_token: String, @Path("accountId") accountId: Int, @Body account: Account): Call<Result>
 
-    @DELETE("accounts/{accountId}")
+    @DELETE("api/accounts/{accountId}")
     fun deleteAccount(@Header("access_token") access_token: String, @Path("accountId") accountId: Int): Call<Result>
 }

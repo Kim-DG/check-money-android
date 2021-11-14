@@ -36,8 +36,6 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var text_discorrect: TextView
     private lateinit var userId: String
     private lateinit var userPw: String
-    private lateinit var access_token: String
-    private lateinit var refresh_token: String
 
     private val RC_SIGN_IN = 99
     private val TAG = "LoginActivity"

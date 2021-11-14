@@ -205,15 +205,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     //-----------------------------------------------------------------------
 
     private fun getAccount() {
-        RetrofitBuild.api.getAccount(access_token).enqueue(object : Callback<ResultAccountList> {
+        RetrofitBuild.api.getAccount("Bearer "+access_token).enqueue(object : Callback<ResultAccountList> {
             override fun onResponse(call: Call<ResultAccountList>, response: Response<ResultAccountList>) {
                 if(response.isSuccessful) { // <--> response.code == 200
                     Log.d(TAG2, "연결성공")
                     val responseApi = response.body()
                     Log.d(TAG2,responseApi.toString())
                 } else { // code == 400
-                    //val errorResponse: ErrorResult? = gson.fromJson(response.errorBody()!!.charStream(), type)
-                    //Log.d(TAG2, errorResponse.toString())
                     Log.d(TAG2, "연결실패")
                 }
             }
