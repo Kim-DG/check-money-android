@@ -52,12 +52,14 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
     private lateinit var access_token: String
     private lateinit var refresh_token: String
     private lateinit var user_email: String
+    private lateinit var bearerAccessToken: String
 
     @SuppressLint("SimpleDateFormat")
     private var df = SimpleDateFormat("yyyy/MM")
     @SuppressLint("SimpleDateFormat")
     private var tf = SimpleDateFormat("yyyyMMddHHmmssSSZZ")
 
+    private var accountId = -1
     private val TAG = "WalletActivity"
     private val TAG2 = "WalletActivity_API"
 
@@ -190,7 +192,10 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         access_token = intent.getStringExtra("access_token")!!
         refresh_token = intent.getStringExtra("refresh_token")!!
         user_email = intent.getStringExtra("userId")!!
+        accountId = intent.getIntExtra("accountId", -1)
         text_email.text = user_email
+        bearerAccessToken = "Bearer $access_token"
+        Log.d("!!!!!!!!!!!!!!!!!!!",accountId.toString())
     }
 
     //drawer layout 사이즈 조절
@@ -391,6 +396,8 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
                 val btn_cancle = dlg.findViewById<Button>(R.id.btn_cancel)
 
                 btn_create.setOnClickListener {
+                    val account = Account(title = et_wname?.text.toString(), description = "aa")
+                    postAccount(bearerAccessToken, account)
                     ProfileDataList.datas.apply {
                         add(ProfileData(title = "${et_wname?.text}",id = -1))
                         profileAdapter.datas = ProfileDataList.datas
@@ -439,9 +446,8 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
     //                            Rest Api function
     //-----------------------------------------------------------------------
 
-    private fun postAccount(account: Account) {
-        RetrofitBuild.api.postAccount(access_token, account).enqueue(object :
-            Callback<ResultAccount> {
+    private fun postAccount(accessToken: String, account: Account) {
+        RetrofitBuild.api.postAccount(accessToken, account).enqueue(object : Callback<ResultAccount> {
             override fun onResponse(call: Call<ResultAccount>, response: Response<ResultAccount>) {
                 if(response.isSuccessful) { // <--> response.code == 200
                     Log.d(TAG2, "연결성공")

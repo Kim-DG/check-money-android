@@ -43,6 +43,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var access_token: String
     private lateinit var refresh_token: String
     private lateinit var user_email: String
+    private lateinit var bearerAccessToken: String
 
     private val TAG = "MainActivity"
     private val TAG2 = "MainActivity_API"
@@ -59,10 +60,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         googleBuildIn()
         //access token, refresh token, 사용자 이메일을 LoginActivity에서 받아옴
         getExtraLogin()
-        //recycler항목 추가
-        initRecycler()
 
-        getAccount()
+        getAccount(bearerAccessToken)
 
         btn_navi.setOnClickListener {
             layout_drawer.openDrawer(GravityCompat.START)
@@ -111,16 +110,19 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         refresh_token = intent.getStringExtra("refresh_token")!!
         user_email = intent.getStringExtra("userId")!!
         text_email.text = user_email
+        bearerAccessToken = "Bearer $access_token"
     }
 
     //recycler항목 추가
     @SuppressLint("NotifyDataSetChanged")
-    private fun initRecycler() {
+    private fun initRecycler(accountList: ArrayList<AccountModel>) {
         profileAdapter = ProfileAdapter(this,access_token,refresh_token,user_email)
         rv_profile.adapter = profileAdapter
 
         ProfileDataList.datas.apply {
-            add(ProfileData(title = "name", id = 0))
+            accountList.forEach {
+                add(ProfileData(title = it.title, id = it.id))
+            }
             Log.d(TAG,"Profile Data list" + ProfileDataList.datas.toString())
             profileAdapter.datas = ProfileDataList.datas
             profileAdapter.notifyDataSetChanged()
@@ -144,7 +146,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 btn_create.setOnClickListener {
                     val account = Account(title = et_wname?.text.toString(), description = "aa")
-                    postAccount(account)
+                    postAccount(bearerAccessToken, account)
                     ProfileDataList.datas.apply {
                         add(ProfileData(title = "${et_wname?.text}", id = 0))
                         profileAdapter.datas = ProfileDataList.datas
@@ -204,13 +206,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     //                            Rest Api function
     //-----------------------------------------------------------------------
 
-    private fun getAccount() {
-        RetrofitBuild.api.getAccount("Bearer "+access_token).enqueue(object : Callback<ResultAccountList> {
+    private fun getAccount(accessToken: String) {
+        RetrofitBuild.api.getAccount(accessToken).enqueue(object : Callback<ResultAccountList> {
             override fun onResponse(call: Call<ResultAccountList>, response: Response<ResultAccountList>) {
                 if(response.isSuccessful) { // <--> response.code == 200
                     Log.d(TAG2, "연결성공")
                     val responseApi = response.body()
                     Log.d(TAG2,responseApi.toString())
+                    initRecycler(response.body()!!.rows)
                 } else { // code == 400
                     Log.d(TAG2, "연결실패")
                 }
@@ -223,8 +226,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         })
     }
 
-    private fun postAccount(account: Account) {
-        RetrofitBuild.api.postAccount(access_token, account).enqueue(object : Callback<ResultAccount> {
+    private fun postAccount(accessToken: String, account: Account) {
+        RetrofitBuild.api.postAccount(accessToken, account).enqueue(object : Callback<ResultAccount> {
             override fun onResponse(call: Call<ResultAccount>, response: Response<ResultAccount>) {
                 if(response.isSuccessful) { // <--> response.code == 200
                     Log.d(TAG2, "연결성공")

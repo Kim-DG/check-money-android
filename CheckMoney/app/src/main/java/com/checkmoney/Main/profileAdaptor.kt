@@ -47,6 +47,7 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
                     putExtra("access_token",access_token)
                     putExtra("refresh_token",refresh_token)
                     putExtra("userId",user_email)
+                    putExtra("accountId",item.id)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }.run { context.startActivity(this) }
             }

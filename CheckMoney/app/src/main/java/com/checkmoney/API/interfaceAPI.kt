@@ -24,14 +24,14 @@ interface API{
     fun postRefresh(@Body refreshToken: RefreshToken): Call<ResultAndToken>
 
     @GET("api/accounts")
-    fun getAccount(@Header("Authorization") Authorization: String): Call<ResultAccountList>
+    fun getAccount(@Header("Authorization") access_token: String): Call<ResultAccountList>
 
     @POST("api/accounts")
-    fun postAccount(@Header("access_token") access_token: String, @Body account: Account): Call<ResultAccount>
+    fun postAccount(@Header("Authorization") access_token: String, @Body account: Account): Call<ResultAccount>
 
     @PUT("api/accounts/{accountId}")
-    fun putAccount(@Header("access_token") access_token: String, @Path("accountId") accountId: Int, @Body account: Account): Call<Result>
+    fun putAccount(@Header("Authorization") access_token: String, @Path("accountId") accountId: Int, @Body account: Account): Call<Result>
 
     @DELETE("api/accounts/{accountId}")
-    fun deleteAccount(@Header("access_token") access_token: String, @Path("accountId") accountId: Int): Call<Result>
+    fun deleteAccount(@Header("Authorization") access_token: String, @Path("accountId") accountId: Int): Call<Result>
 }

@@ -3,6 +3,7 @@ package com.checkmoney
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 import java.util.*
+import kotlin.collections.ArrayList
 
 //request-postEmail 이메일을 입력하고 인증번호 전송
 data class Email(
@@ -37,10 +38,6 @@ data class Account(
     var description: String
 )
 
-data class AccountModelList(
-    var accountModel: MutableList<AccountModel>
-)
-
 data class AccountModel(
     var id: Int,
     var title: String,
@@ -66,7 +63,7 @@ data class ResultAccountList(
     var result: Boolean,
     var code: Int,
     var message: String,
-    var rows: AccountModelList,
+    var rows: ArrayList<AccountModel>,
     var count: Int
 )
 //response
