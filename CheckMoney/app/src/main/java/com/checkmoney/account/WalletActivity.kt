@@ -15,6 +15,7 @@ import android.widget.*
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.RecyclerView
+import com.checkmoney.account.CalTotal
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -22,10 +23,11 @@ import com.google.android.material.navigation.NavigationView
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigationItemSelectedListener {
     private val money_datas_list = MoneyProfileDataList
 
     private lateinit var walletDatas: ProfileData
@@ -36,6 +38,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
     private lateinit var layout_drawer: DrawerLayout
     private lateinit var nav_header: View
     private lateinit var text_wname: TextView
+    private lateinit var text_price: TextView
     private lateinit var btn_logout: TextView
     private lateinit var btn_left: ImageView
     private lateinit var btn_right: ImageView
@@ -55,10 +58,17 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
     private lateinit var bearerAccessToken: String
 
     @SuppressLint("SimpleDateFormat")
-    private var df = SimpleDateFormat("yyyy/MM")
+    private val df = SimpleDateFormat("yyyy/MM")
     @SuppressLint("SimpleDateFormat")
-    private var tf = SimpleDateFormat("yyyyMMddHHmmssSSZZ")
+    private val yf = SimpleDateFormat("yyyy")
+    @SuppressLint("SimpleDateFormat")
+    private val mf = SimpleDateFormat("MM")
+    @SuppressLint("SimpleDateFormat")
+    private val qf = SimpleDateFormat("dd")
+    @SuppressLint("SimpleDateFormat")
+    private val tf = SimpleDateFormat("yyyyMMddHHmmssSSZZ")
 
+    private var totalPrice: Long = 0
     private var accountId = -1
     private val TAG = "WalletActivity"
     private val TAG2 = "WalletActivity_API"
@@ -76,15 +86,11 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         //access token, refresh token, 사용자 이메일을 LoginActivity에서 받아옴
         getExtraLogin()
         //recycler항목 추가
-
-        //money_datas_list.datas.add(MoneyProfileData(date = Date(MoneyProfileData.DATE_TYPE,"2021","11","11",""), detail = "", positive = "positive", price = 0, category = ""))
-       // money_datas_list.datas.add(MoneyProfileData(date = Date(MoneyProfileData.PRICE_TYPE,"2021","11","11", Calendar.getInstance().toString()), detail = "xx", positive = "positive", price = 100050, category = "xx"))
-        //money_datas_list.datas = money_datas_list.datas.distinct().toMutableList()
-       // money_datas_list.datas.sortWith(compareByDescending<MoneyProfileData>{it.date.year}.thenByDescending { it.date.month }.thenByDescending { it.date.day }.thenByDescending { it.date.type })
-
         initRecycler()
         //menu recyceler항목 추가
         menuRecycler()
+        //총액계산
+        initTotalPrice()
 
         btn_total.setOnClickListener {
             btn_total.setTypeface(null, Typeface.BOLD)
@@ -154,12 +160,33 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         btn_total.callOnClick()
     }
 
+    private fun initTotalPrice(){
+        val plus = money_datas_list.datas.filter{it.is_consuption == 0}
+        val minus = money_datas_list.datas.filter { it.is_consuption == 1}
+        plus.forEach { totalPrice += it.price }
+        minus.forEach { totalPrice -= it.price }
+        val format = DecimalFormat("#,###")
+        val strPrice = format.format(totalPrice)
+        text_price.text = strPrice + "원"
+    }
+
+    private fun calTotalPrice(is_consumtion: Int, price: Int){
+        if(is_consumtion == 0)
+            totalPrice += price
+        else
+            totalPrice -= price
+        val format = DecimalFormat("#,###")
+        val strPrice = format.format(totalPrice)
+        text_price.text = strPrice + "원"
+    }
+
     //변수 초기화 및 세팅
     private fun setVariable() {
         layout_drawer = findViewById(R.id.layout_drawer)
         naviView = findViewById(R.id.naviView)
         nav_header = naviView.getHeaderView(0)
         text_wname = findViewById(R.id.text_wname)
+        text_price = findViewById(R.id.text_price)
         money_rv_profile = findViewById(R.id.rv_profile)
         rv_profile = nav_header.findViewById(R.id.rv_profile)
         btn_logout = nav_header.findViewById(R.id.text_logout)
@@ -179,13 +206,9 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         ThisTime.cal.time = Date()
         naviView.setNavigationItemSelectedListener(this)// 네비게이션 메뉴 아이템에 클릭 속성 부여
 
-        SpinnerArray.sData = resources.getStringArray(R.array.category)
-        SpinnerArray.sData2 = resources.getStringArray(R.array.price)
-
-        money_profileAdapter = MoneyProfileAdapter(this)
-        money_rv_profile.adapter = money_profileAdapter
+        SpinnerArray.sData = category.category
+        SpinnerArray.sData2 = consumtion.consumtion
     }
-
 
     //token과 유저정보 가져옴
     private fun getExtraLogin() {
@@ -195,7 +218,9 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         accountId = intent.getIntExtra("accountId", -1)
         text_email.text = user_email
         bearerAccessToken = "Bearer $access_token"
-        Log.d("!!!!!!!!!!!!!!!!!!!",accountId.toString())
+
+        money_profileAdapter = MoneyProfileAdapter(this,this,accountId)
+        money_rv_profile.adapter = money_profileAdapter
     }
 
     //drawer layout 사이즈 조절
@@ -212,7 +237,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
     //통장목록표시
     @SuppressLint("NotifyDataSetChanged")
     private fun menuRecycler() {
-        profileAdapter = ProfileAdapter(this,access_token,refresh_token,user_email)
+        profileAdapter = ProfileAdapter(this,access_token,refresh_token,user_email,accountId)
         rv_profile.adapter = profileAdapter
 
         ProfileDataList.datas.apply {
@@ -233,11 +258,12 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         }
     }
 
+
     //수입내역표시
     @SuppressLint("NotifyDataSetChanged")
     private fun incomeInitRecycler() {
         money_datas_list.datas.apply {
-            val filterDatas = (money_datas_list.datas.filter{(it.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.year == (ThisTime.cal.get(Calendar.YEAR).toString())) && (it.positive == "positive")}).toMutableList()
+            val filterDatas = (money_datas_list.datas.filter{(it.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.year == (ThisTime.cal.get(Calendar.YEAR).toString())) && (it.is_consuption == 0)}).toMutableList()
             money_profileAdapter.datas = filterDatas
             money_profileAdapter.notifyDataSetChanged()
         }
@@ -247,7 +273,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
     @SuppressLint("NotifyDataSetChanged")
     private fun expenseInitRecycler() {
         money_datas_list.datas.apply {
-            val filterDatas = (money_datas_list.datas.filter{(it.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.year == (ThisTime.cal.get(Calendar.YEAR).toString())) && (it.positive == "negative")}).toMutableList()
+            val filterDatas = (money_datas_list.datas.filter{(it.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.year == (ThisTime.cal.get(Calendar.YEAR).toString())) && (it.is_consuption == 1)}).toMutableList()
             money_profileAdapter.datas = filterDatas
             money_profileAdapter.notifyDataSetChanged()
         }
@@ -293,14 +319,22 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         month.maxValue = 12
         day.maxValue = 31
 
-        var positive = ""
-        var category = ""
+        var is_consumtion = 0
+        var category = 0
 
         val c = System.currentTimeMillis()
         val a = Date(c)
         val time = tf.format(a)
 
-        spinner.setSelection(1)
+        val strYear = yf.format(a)
+        val strMonth = mf.format(a)
+        val strDay = qf.format(a)
+
+        year.value = strYear.toInt()
+        month.value = strMonth.toInt()
+        day.value = strDay.toInt()
+
+        spinner.setSelection(0)
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
             override fun onItemSelected(
                 parent: AdapterView<*>?,
@@ -308,7 +342,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
                 position: Int,
                 id: Long
             ) {
-                category = SpinnerArray.sData[position]
+                category = position
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -316,7 +350,7 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
             }
         }
 
-        spinner2.setSelection(1)
+        spinner2.setSelection(0)
         spinner2.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
             override fun onItemSelected(
                 parent: AdapterView<*>?,
@@ -325,10 +359,10 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
                 id: Long
             ) {
                 if(SpinnerArray.sData2[position] == "지출"){
-                    positive = "negative"
+                    is_consumtion = 1
                 }
                 else
-                    positive = "positive"
+                    is_consumtion = 0
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -343,30 +377,30 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
                 money_datas_list.datas.apply {
                     add(
                         MoneyProfileData(
-                            date = Date(
+                            id = 0, is_consuption = is_consumtion, price = 0, detail = "", date = Date(
                                 MoneyProfileData.DATE_TYPE,
                                 String.format("%02d", year.value),
                                 String.format("%02d", month.value),
                                 String.format("%02d", day.value),
                                 ""
-                            ), detail = "", positive = positive,
-                            price = 0, category = ""
+                            ),
+                            category = 0, account_id = accountId
                         )
                     )
                     add(
                         MoneyProfileData(
-                            date = Date(
+                            id = 0, is_consuption = is_consumtion, price = et_price.text.toString().toLong(),
+                            detail = et_detail.text.toString(), date = Date(
                                 MoneyProfileData.PRICE_TYPE,
                                 String.format("%02d", year.value),
                                 String.format("%02d", month.value),
                                 String.format("%02d", day.value),
                                 time
-                            ), detail = et_detail.text.toString(), positive = positive,
-                            price = et_price.text.toString().toLong(), category = category
+                            ), category = category, account_id = accountId
                         )
                     )
+                    calTotalPrice(is_consumtion,et_price.text.toString().toInt())
                 }
-                Log.d("!!!!!!!!!!!!!!!424124124",MoneyProfileDataList.datas.toString())
                 money_datas_list.datas = money_datas_list.datas.distinct().toMutableList()
                 money_datas_list.datas.sortWith(compareByDescending<MoneyProfileData> { it.date.year }.thenByDescending { it.date.month }
                     .thenByDescending { it.date.day }.thenByDescending { it.date.type })
@@ -392,18 +426,13 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
                 dlg.show()
 
                 val et_wname = dlg.findViewById<EditText>(R.id.et_wname)
+                val et_description = dlg.findViewById<EditText>(R.id.et_description)
                 val btn_create = dlg.findViewById<Button>(R.id.btn_create)
                 val btn_cancle = dlg.findViewById<Button>(R.id.btn_cancel)
 
                 btn_create.setOnClickListener {
-                    val account = Account(title = et_wname?.text.toString(), description = "aa")
+                    val account = Account(title = et_wname?.text.toString(), description = et_description?.text.toString())
                     postAccount(bearerAccessToken, account)
-                    ProfileDataList.datas.apply {
-                        add(ProfileData(title = "${et_wname?.text}",id = -1))
-                        profileAdapter.datas = ProfileDataList.datas
-                        profileAdapter.notifyDataSetChanged()
-                        Log.d("!!!!!!!!!!!!!!!!!!!!",ProfileDataList.datas.toString())
-                    }
                     dlg.dismiss()
                 }
                 btn_cancle.setOnClickListener {
@@ -414,6 +443,20 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
             R.id.test3 -> Toast.makeText(applicationContext, "test3", Toast.LENGTH_SHORT).show()
         }
         return false
+    }
+
+    override fun calTotal(deleteConsum: Int, deletePrice: Long, addConsum: Int, addPrice: Long) {
+        if(deleteConsum == 0)
+            totalPrice -= deletePrice
+        else
+            totalPrice += deletePrice
+        if(addConsum == 0)
+            totalPrice += addPrice
+        else
+            totalPrice -= addPrice
+        val format = DecimalFormat("#,###")
+        val strPrice = format.format(totalPrice)
+        text_price.text = strPrice + "원"
     }
 
     //-----------------------------------------------------------------------
@@ -453,50 +496,16 @@ class WalletActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
                     Log.d(TAG2, "연결성공")
                     val responseApi = response.body()
                     Log.d(TAG2,responseApi.toString())
+                    ProfileDataList.datas.apply {
+                        add(ProfileData(title = account.title, description = account.description ,id = responseApi!!.id))
+                        profileAdapter.datas = ProfileDataList.datas
+                        profileAdapter.notifyDataSetChanged()
+                    }
                 } else { // code == 400
                     Log.d(TAG2, "연결실패")
                 }
             }
             override fun onFailure(call: Call<ResultAccount>, t: Throwable) { // code == 500
-                // 실패 처리
-                Log.d(TAG2, "인터넷 네트워크 문제")
-                Log.d(TAG2, t.toString())
-            }
-        })
-    }
-
-    private fun putAccount(accountId: Int, account: Account) {
-        RetrofitBuild.api.putAccount(access_token, accountId, account).enqueue(object :
-            Callback<Result> {
-            override fun onResponse(call: Call<Result>, response: Response<Result>) {
-                if(response.isSuccessful) { // <--> response.code == 200
-                    Log.d(TAG2, "연결성공")
-                    val responseApi = response.body()
-                    Log.d(TAG2,responseApi.toString())
-                } else { // code == 400
-                    Log.d(TAG2, "연결실패")
-                }
-            }
-            override fun onFailure(call: Call<Result>, t: Throwable) { // code == 500
-                // 실패 처리
-                Log.d(TAG2, "인터넷 네트워크 문제")
-                Log.d(TAG2, t.toString())
-            }
-        })
-    }
-
-    private fun deleteAccount(accountId: Int) {
-        RetrofitBuild.api.deleteAccount(access_token, accountId).enqueue(object : Callback<Result> {
-            override fun onResponse(call: Call<Result>, response: Response<Result>) {
-                if(response.isSuccessful) { // <--> response.code == 200
-                    Log.d(TAG2, "연결성공")
-                    val responseApi = response.body()
-                    Log.d(TAG2,responseApi.toString())
-                } else { // code == 400
-                    Log.d(TAG2, "연결실패")
-                }
-            }
-            override fun onFailure(call: Call<Result>, t: Throwable) { // code == 500
                 // 실패 처리
                 Log.d(TAG2, "인터넷 네트워크 문제")
                 Log.d(TAG2, t.toString())

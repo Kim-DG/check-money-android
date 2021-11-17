@@ -3,8 +3,6 @@ package com.checkmoney
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
-import android.content.Intent
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,11 +10,12 @@ import android.view.Window
 import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.checkmoney.account.CalTotal
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-class MoneyProfileAdapter(private val context: Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class MoneyProfileAdapter(private val context: Context, private val calTotal: CalTotal, private val accountId: Int) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     var datas = mutableListOf<MoneyProfileData>()
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -64,18 +63,18 @@ class MoneyProfileAdapter(private val context: Context) : RecyclerView.Adapter<R
         private val text_price: TextView = itemView.findViewById(R.id.text_price)
         private val text_category: TextView = itemView.findViewById(R.id.text_category)
 
-        @SuppressLint("NotifyDataSetChanged")
+        @SuppressLint("NotifyDataSetChanged", "SimpleDateFormat")
         fun bind(item: MoneyProfileData) {
             val format = DecimalFormat("#,###")
             var price = ""
-            if (item.positive == "positive") {
+            if (item.is_consuption == 0) {
                 price = "+" + format.format(item.price)
                 text_price.setTextColor(
                     ContextCompat.getColor(context,
                     R.color.logoBlue
                 ))
             }
-            else if(item.positive == "negative"){
+            else if(item.is_consuption == 1){
                 price = "-" + format.format(item.price)
                 text_price.setTextColor(
                     ContextCompat.getColor(context,
@@ -87,7 +86,7 @@ class MoneyProfileAdapter(private val context: Context) : RecyclerView.Adapter<R
 
             text_detail.text = item.detail
             text_price.text = price
-            text_category.text = item.category
+            text_category.text = category.category[item.category]
 
             itemView.setOnClickListener {
                 val dlg = Dialog(context)
@@ -118,6 +117,11 @@ class MoneyProfileAdapter(private val context: Context) : RecyclerView.Adapter<R
                 month.wrapSelectorWheel = false
                 day.wrapSelectorWheel = false
 
+                year.descendantFocusability = NumberPicker.FOCUS_BLOCK_DESCENDANTS
+                month.descendantFocusability = NumberPicker.FOCUS_BLOCK_DESCENDANTS
+                day.descendantFocusability = NumberPicker.FOCUS_BLOCK_DESCENDANTS
+
+
                 //  최소값 설정
                 year.minValue = 2021
                 month.minValue = 1
@@ -128,13 +132,25 @@ class MoneyProfileAdapter(private val context: Context) : RecyclerView.Adapter<R
                 month.maxValue = 12
                 day.maxValue = 31
 
-                var positive = ""
-                var category = ""
+                var is_consumtion = 0
+                var category = 0
 
                 val c = System.currentTimeMillis()
                 val a = Date(c)
                 val tf = SimpleDateFormat("yyyyMMddHHmmssSSZZ")
                 val time = tf.format(a)
+
+                val yf = SimpleDateFormat("yyyy")
+                val mf = SimpleDateFormat("MM")
+                val qf = SimpleDateFormat("dd")
+
+                val strYear = yf.format(a)
+                val strMonth = mf.format(a)
+                val strDay = qf.format(a)
+
+                year.value = strYear.toInt()
+                month.value = strMonth.toInt()
+                day.value = strDay.toInt()
 
                 spinner.setSelection(0)
                 spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
@@ -144,7 +160,7 @@ class MoneyProfileAdapter(private val context: Context) : RecyclerView.Adapter<R
                         position: Int,
                         id: Long
                     ) {
-                        category = SpinnerArray.sData[position]
+                        category = position
                     }
 
                     override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -161,10 +177,10 @@ class MoneyProfileAdapter(private val context: Context) : RecyclerView.Adapter<R
                         id: Long
                     ) {
                         if(SpinnerArray.sData2[position] == "지출"){
-                            positive = "negative"
+                            is_consumtion = 1
                         }
                         else
-                            positive = "positive"
+                            is_consumtion = 0
                     }
 
                     override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -179,54 +195,53 @@ class MoneyProfileAdapter(private val context: Context) : RecyclerView.Adapter<R
                         val dod = datas[adapterPosition]
                         MoneyProfileDataList.datas.remove(datas[adapterPosition])
 
-                        if(!MoneyProfileDataList.datas.any{it.date.type == 0 && it.date.year == dod.date.year && it.date.month == dod.date.month && it.date.day == dod.date.day && it.positive == dod.positive}) {
+                        //동일한 날짜의 내역이 없으면 날짜 삭제
+                        if(!MoneyProfileDataList.datas.any{it.date.type == 0 && it.date.year == dod.date.year && it.date.month == dod.date.month && it.date.day == dod.date.day && it.is_consuption == dod.is_consuption}) {
                             val data = MoneyProfileData(
-                                date = Date(
+                                id = 0, is_consuption = dod.is_consuption, price = 0, detail = "", date = Date(
                                     MoneyProfileData.DATE_TYPE,
                                     datas[adapterPosition].date.year,
                                     datas[adapterPosition].date.month,
                                     datas[adapterPosition].date.day,
                                     ""
-                                ),detail = "",positive =dod.positive,price = 0, category =""
+                                ),category = 0,account_id = accountId
                             )
                             if(MoneyProfileDataList.datas.any{it == data}) {
                                 MoneyProfileDataList.datas.remove(data)
                             }
-                            Log.d("!!!!!!!!!!!!!!!!!!!",MoneyProfileDataList.datas.toString())
                         }
 
                         MoneyProfileDataList.datas.apply {
                             add(
                                 MoneyProfileData(
-                                    date = Date(
+                                    id = 0,  is_consuption = is_consumtion, price = 0, detail = "", date = Date(
                                         MoneyProfileData.DATE_TYPE,
                                         String.format("%02d", year.value),
                                         String.format("%02d", month.value),
                                         String.format("%02d", day.value),
                                         ""
-                                    ), detail = "", positive = positive,
-                                    price = 0, category = ""
+                                    ), category = 0, account_id = accountId
                                 )
                             )
                             add(
                                 MoneyProfileData(
-                                    date = Date(
+                                    id = 0, is_consuption = is_consumtion, price = et_price.text.toString().toLong(),
+                                    detail = et_detail.text.toString(), date = Date(
                                         MoneyProfileData.PRICE_TYPE,
                                         String.format("%02d", year.value),
                                         String.format("%02d", month.value),
                                         String.format("%02d", day.value),
                                         time
-                                    ), detail = et_detail.text.toString(), positive = positive,
-                                    price = et_price.text.toString().toLong(), category = category
+                                    ), category = category, account_id = accountId
                                 )
                             )
+                            calTotal.calTotal(item.is_consuption,item.price,is_consumtion,et_price.text.toString().toLong())
                         }
 
                         MoneyProfileDataList.datas = MoneyProfileDataList.datas.distinct().toMutableList()
                         MoneyProfileDataList.datas.sortWith(compareByDescending<MoneyProfileData> { it.date.year }.thenByDescending { it.date.month }
                             .thenByDescending { it.date.day }.thenByDescending { it.date.type })
                         if(ListType.listype == ListType.TOTAL) {
-                            Log.d("$$$$$$$$$$$$$$$$$$$$$",MoneyProfileDataList.datas.toString()+ListType.listype.toString())
                             val total_datas_list =
                                 MoneyProfileDataList.datas.distinctBy { MoneyProfileData -> MoneyProfileData.date }
                             val filterDatas = total_datas_list.filter {
@@ -241,7 +256,7 @@ class MoneyProfileAdapter(private val context: Context) : RecyclerView.Adapter<R
                             val filterDatas = (MoneyProfileDataList.datas.filter {
                                 (it.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.year == (ThisTime.cal.get(
                                     Calendar.YEAR
-                                ).toString())) && (it.positive == "negative")
+                                ).toString())) && (it.is_consuption == 1)
                             }).toMutableList()
                             this@MoneyProfileAdapter.datas = filterDatas
                             this@MoneyProfileAdapter.notifyDataSetChanged()
@@ -250,7 +265,7 @@ class MoneyProfileAdapter(private val context: Context) : RecyclerView.Adapter<R
                             val filterDatas = (MoneyProfileDataList.datas.filter {
                                 (it.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.year == (ThisTime.cal.get(
                                     Calendar.YEAR
-                                ).toString())) && (it.positive == "positive")
+                                ).toString())) && (it.is_consuption == 0)
                             }).toMutableList()
                             this@MoneyProfileAdapter.datas = filterDatas
                             this@MoneyProfileAdapter.notifyDataSetChanged()
@@ -264,20 +279,20 @@ class MoneyProfileAdapter(private val context: Context) : RecyclerView.Adapter<R
                     val dod = datas[adapterPosition]
                     MoneyProfileDataList.datas.remove(datas[adapterPosition])
 
-                    if(!MoneyProfileDataList.datas.any{it.date.type == 0 && it.date.year == dod.date.year && it.date.month == dod.date.month && it.date.day == dod.date.day && it.positive == dod.positive}) {
+                    if(!MoneyProfileDataList.datas.any{it.date.type == 0 && it.date.year == dod.date.year && it.date.month == dod.date.month && it.date.day == dod.date.day && it.is_consuption == dod.is_consuption}) {
                         val data = MoneyProfileData(
-                            date = Date(
+                            id = 0, is_consuption = dod.is_consuption, price = 0, detail = "",date = Date(
                                 MoneyProfileData.DATE_TYPE,
                                 datas[adapterPosition].date.year,
                                 datas[adapterPosition].date.month,
                                 datas[adapterPosition].date.day,
                                 ""
-                            ),detail = "",positive =dod.positive,price = 0, category =""
+                            ), category = 0, account_id = accountId
                         )
                         if(MoneyProfileDataList.datas.any{it == data}) {
                             MoneyProfileDataList.datas.remove(data)
                         }
-                        Log.d("!!!!!!!!!!!!!!!!!!!",MoneyProfileDataList.datas.toString())
+                        calTotal.calTotal(item.is_consuption,item.price,0,0)
                     }
 
                     val cal = Calendar.getInstance()
@@ -297,7 +312,7 @@ class MoneyProfileAdapter(private val context: Context) : RecyclerView.Adapter<R
                         val filterDatas = (MoneyProfileDataList.datas.filter {
                             (it.date.month == (cal.get(Calendar.MONTH) + 1).toString()) && (it.date.year == (cal.get(
                                 Calendar.YEAR
-                            ).toString())) && (it.positive == "negative")
+                            ).toString())) && (it.is_consuption == 1)
                         }).toMutableList()
                         this@MoneyProfileAdapter.datas = filterDatas
                         this@MoneyProfileAdapter.notifyDataSetChanged()
@@ -306,7 +321,7 @@ class MoneyProfileAdapter(private val context: Context) : RecyclerView.Adapter<R
                         val filterDatas = (MoneyProfileDataList.datas.filter {
                             (it.date.month == (cal.get(Calendar.MONTH) + 1).toString()) && (it.date.year == (cal.get(
                                 Calendar.YEAR
-                            ).toString())) && (it.positive == "positive")
+                            ).toString())) && (it.is_consuption == 0)
                         }).toMutableList()
                         this@MoneyProfileAdapter.datas = filterDatas
                         this@MoneyProfileAdapter.notifyDataSetChanged()
@@ -321,5 +336,4 @@ class MoneyProfileAdapter(private val context: Context) : RecyclerView.Adapter<R
             }
         }
     }
-
 }

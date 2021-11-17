@@ -81,10 +81,10 @@ data class ErrorResult(
 )
 
 @Parcelize
-data class ProfileData(var title: String, var id: Int): Parcelable {}
+data class ProfileData(var title: String, var description: String, var id: Int): Parcelable {}
 
 @Parcelize
-data class MoneyProfileData(var date: Date, var detail: String, var positive: String, var price: Long, var category: String): Parcelable {
+data class MoneyProfileData(var id: Int, var is_consuption: Int, var price: Long, var detail: String, var date: Date, var category: Int, var account_id: Int): Parcelable {
     companion object {
         const val PRICE_TYPE = 0
         const val DATE_TYPE = 1
@@ -103,8 +103,8 @@ object ProfileDataList{
 }
 
 object SpinnerArray{
-    var sData : Array<String> = arrayOf()
-    var sData2 : Array<String> = arrayOf()
+    var sData : ArrayList<String> = arrayListOf()
+    var sData2 : ArrayList<String> = arrayListOf()
 }
 
 object ListType{
@@ -117,3 +117,12 @@ object ListType{
 object ThisTime{
     var cal: Calendar = Calendar.getInstance()
 }
+
+object category{
+    val category: ArrayList<String> = arrayListOf("식비","쇼핑","주거비","의료비","생활용품비","통신비","교통비","기타")
+}
+
+object consumtion{
+    val consumtion: ArrayList<String> = arrayListOf("수입", "지출")
+}
+

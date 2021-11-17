@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private val TAG = "MainActivity"
     private val TAG2 = "MainActivity_API"
+    private var accountId = -1
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -116,12 +117,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     //recycler항목 추가
     @SuppressLint("NotifyDataSetChanged")
     private fun initRecycler(accountList: ArrayList<AccountModel>) {
-        profileAdapter = ProfileAdapter(this,access_token,refresh_token,user_email)
+        profileAdapter = ProfileAdapter(this,access_token,refresh_token,user_email,accountId)
         rv_profile.adapter = profileAdapter
 
         ProfileDataList.datas.apply {
             accountList.forEach {
-                add(ProfileData(title = it.title, id = it.id))
+                add(ProfileData(title = it.title, description = it.description, id = it.id))
             }
             Log.d(TAG,"Profile Data list" + ProfileDataList.datas.toString())
             profileAdapter.datas = ProfileDataList.datas
@@ -141,17 +142,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 dlg.show()
 
                 val et_wname = dlg.findViewById<EditText>(R.id.et_wname)
+                val et_description = dlg.findViewById<EditText>(R.id.et_description)
                 val btn_create = dlg.findViewById<Button>(R.id.btn_create)
                 val btn_cancle = dlg.findViewById<Button>(R.id.btn_cancel)
 
                 btn_create.setOnClickListener {
-                    val account = Account(title = et_wname?.text.toString(), description = "aa")
+                    val account = Account(title = et_wname?.text.toString(), description = et_description?.text.toString())
                     postAccount(bearerAccessToken, account)
-                    ProfileDataList.datas.apply {
-                        add(ProfileData(title = "${et_wname?.text}", id = 0))
-                        profileAdapter.datas = ProfileDataList.datas
-                        profileAdapter.notifyDataSetChanged()
-                    }
                     dlg.dismiss()
                 }
                 btn_cancle.setOnClickListener {
@@ -233,49 +230,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     Log.d(TAG2, "연결성공")
                     val responseApi = response.body()
                     Log.d(TAG2,responseApi.toString())
+                    ProfileDataList.datas.apply {
+                        add(ProfileData(title = account.title, description = account.description ,id = responseApi!!.id))
+                        profileAdapter.datas = ProfileDataList.datas
+                        profileAdapter.notifyDataSetChanged()
+                    }
                 } else { // code == 400
                     Log.d(TAG2, "연결실패")
                 }
             }
             override fun onFailure(call: Call<ResultAccount>, t: Throwable) { // code == 500
-                // 실패 처리
-                Log.d(TAG2, "인터넷 네트워크 문제")
-                Log.d(TAG2, t.toString())
-            }
-        })
-    }
-
-    private fun putAccount(accountId: Int, account: Account) {
-        RetrofitBuild.api.putAccount(access_token, accountId, account).enqueue(object : Callback<Result> {
-            override fun onResponse(call: Call<Result>, response: Response<Result>) {
-                if(response.isSuccessful) { // <--> response.code == 200
-                    Log.d(TAG2, "연결성공")
-                    val responseApi = response.body()
-                    Log.d(TAG2,responseApi.toString())
-                } else { // code == 400
-                    Log.d(TAG2, "연결실패")
-                }
-            }
-            override fun onFailure(call: Call<Result>, t: Throwable) { // code == 500
-                // 실패 처리
-                Log.d(TAG2, "인터넷 네트워크 문제")
-                Log.d(TAG2, t.toString())
-            }
-        })
-    }
-
-    private fun deleteAccount(accountId: Int) {
-        RetrofitBuild.api.deleteAccount(access_token, accountId).enqueue(object : Callback<Result> {
-            override fun onResponse(call: Call<Result>, response: Response<Result>) {
-                if(response.isSuccessful) { // <--> response.code == 200
-                    Log.d(TAG2, "연결성공")
-                    val responseApi = response.body()
-                    Log.d(TAG2,responseApi.toString())
-                } else { // code == 400
-                    Log.d(TAG2, "연결실패")
-                }
-            }
-            override fun onFailure(call: Call<Result>, t: Throwable) { // code == 500
                 // 실패 처리
                 Log.d(TAG2, "인터넷 네트워크 문제")
                 Log.d(TAG2, t.toString())
