@@ -44,6 +44,33 @@ data class AccountModel(
     var description: String,
     var createdAt: String
 )
+
+data class TransactionModel(
+    var id: Int,
+    var is_consuption: Int,
+    var price: Int,
+    var detail: String,
+    var date: Date,
+    var category: Int,
+    var account_id: Int
+)
+
+data class Transaction(
+    var is_consuption: Int,
+    var price: Int,
+    var detail: String,
+    var date: Date,
+    var category: Int,
+    var account_id: Int
+)
+
+data class EditTransaction(
+    var is_consuption: Int,
+    var price: Int,
+    var detail: String,
+    var date: Date,
+    var category: Int,
+)
 //response
 data class Result(
     var result: Boolean,
@@ -67,7 +94,15 @@ data class ResultAccountList(
     var count: Int
 )
 //response
-data class ResultAccount(
+data class ResultTransactions(
+    var result: Boolean,
+    var code: Int,
+    var message: String,
+    var rows: ArrayList<TransactionModel>,
+    var count: Int
+)
+//response
+data class ResultId(
     var result: Boolean,
     var code: Int,
     var message: String?,
@@ -84,14 +119,18 @@ data class ErrorResult(
 data class ProfileData(var title: String, var description: String, var id: Int): Parcelable {}
 
 @Parcelize
-data class MoneyProfileData(var id: Int, var is_consuption: Int, var price: Long, var detail: String, var date: Date, var category: Int, var account_id: Int): Parcelable {
+data class MoneyProfileData(var id: Int, var is_consuption: Int, var price: Int, var detail: String, var date: DateType, var category: Int, var account_id: Int): Parcelable {
     companion object {
         const val PRICE_TYPE = 0
         const val DATE_TYPE = 1
     }
 }
+
 @Parcelize
-data class Date(var type: Int, var year: String, var month: String, var day: String, var time: String): Parcelable{}
+data class DateType(var type: Int, var date: Date): Parcelable{}
+
+@Parcelize
+data class Date(var year: String, var month: String, var day: String, var time: String): Parcelable{}
 
 
 object MoneyProfileDataList{

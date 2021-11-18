@@ -92,6 +92,8 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
         //총액계산
         initTotalPrice()
 
+        getTransaction(bearerAccessToken)
+
         btn_total.setOnClickListener {
             btn_total.setTypeface(null, Typeface.BOLD)
             btn_expense.typeface = Typeface.DEFAULT
@@ -219,7 +221,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
         text_email.text = user_email
         bearerAccessToken = "Bearer $access_token"
 
-        money_profileAdapter = MoneyProfileAdapter(this,this,accountId)
+        money_profileAdapter = MoneyProfileAdapter(this,this,accountId,bearerAccessToken)
         money_rv_profile.adapter = money_profileAdapter
     }
 
@@ -252,7 +254,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
     private fun initRecycler() {
         money_datas_list.datas.apply {
             val total_datas_list = money_datas_list.datas.distinctBy { MoneyProfileData -> MoneyProfileData.date}
-            val filterDatas = total_datas_list.filter{(it.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.year == (ThisTime.cal.get(Calendar.YEAR).toString()))}.toMutableList()
+            val filterDatas = total_datas_list.filter{(it.date.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.date.year == (ThisTime.cal.get(Calendar.YEAR).toString()))}.toMutableList()
             money_profileAdapter.datas = filterDatas
             money_profileAdapter.notifyDataSetChanged()
         }
@@ -263,7 +265,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
     @SuppressLint("NotifyDataSetChanged")
     private fun incomeInitRecycler() {
         money_datas_list.datas.apply {
-            val filterDatas = (money_datas_list.datas.filter{(it.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.year == (ThisTime.cal.get(Calendar.YEAR).toString())) && (it.is_consuption == 0)}).toMutableList()
+            val filterDatas = (money_datas_list.datas.filter{(it.date.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.date.year == (ThisTime.cal.get(Calendar.YEAR).toString())) && (it.is_consuption == 0)}).toMutableList()
             money_profileAdapter.datas = filterDatas
             money_profileAdapter.notifyDataSetChanged()
         }
@@ -273,7 +275,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
     @SuppressLint("NotifyDataSetChanged")
     private fun expenseInitRecycler() {
         money_datas_list.datas.apply {
-            val filterDatas = (money_datas_list.datas.filter{(it.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.year == (ThisTime.cal.get(Calendar.YEAR).toString())) && (it.is_consuption == 1)}).toMutableList()
+            val filterDatas = (money_datas_list.datas.filter{(it.date.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.date.year == (ThisTime.cal.get(Calendar.YEAR).toString())) && (it.is_consuption == 1)}).toMutableList()
             money_profileAdapter.datas = filterDatas
             money_profileAdapter.notifyDataSetChanged()
         }
@@ -330,6 +332,11 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
         val strMonth = mf.format(a)
         val strDay = qf.format(a)
 
+        val date = Date(String.format("%02d", year.value),
+            String.format("%02d", month.value),
+            String.format("%02d", day.value),
+            time)
+
         year.value = strYear.toInt()
         month.value = strMonth.toInt()
         day.value = strDay.toInt()
@@ -369,41 +376,31 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
                 TODO("Not yet implemented")
             }
         }
+
+        val dateData = MoneyProfileData(
+            id = 0, is_consuption = is_consumtion, price = 0, detail = "", date = DateType(
+                MoneyProfileData.DATE_TYPE, date
+            ),
+            category = 0, account_id = accountId
+        )
+
+        val priceData = MoneyProfileData(
+            id = 0, is_consuption = is_consumtion, price = et_price.text.toString().toInt(),
+            detail = et_detail.text.toString(), date = DateType(
+                MoneyProfileData.PRICE_TYPE, date
+            ), category = category, account_id = accountId
+        )
+
         btn_choice.setOnClickListener {
             if(et_detail.text.toString() == "" || et_price.text.toString() == ""){
                 text_alarm.text = "사용내역과 금액을 입력해 주세요."
             }
             else {
-                money_datas_list.datas.apply {
-                    add(
-                        MoneyProfileData(
-                            id = 0, is_consuption = is_consumtion, price = 0, detail = "", date = Date(
-                                MoneyProfileData.DATE_TYPE,
-                                String.format("%02d", year.value),
-                                String.format("%02d", month.value),
-                                String.format("%02d", day.value),
-                                ""
-                            ),
-                            category = 0, account_id = accountId
-                        )
-                    )
-                    add(
-                        MoneyProfileData(
-                            id = 0, is_consuption = is_consumtion, price = et_price.text.toString().toLong(),
-                            detail = et_detail.text.toString(), date = Date(
-                                MoneyProfileData.PRICE_TYPE,
-                                String.format("%02d", year.value),
-                                String.format("%02d", month.value),
-                                String.format("%02d", day.value),
-                                time
-                            ), category = category, account_id = accountId
-                        )
-                    )
-                    calTotalPrice(is_consumtion,et_price.text.toString().toInt())
-                }
+                calTotalPrice(is_consumtion,et_price.text.toString().toInt())
+                postTransaction(bearerAccessToken, Transaction(is_consumtion,et_price.text.toString().toInt(),et_detail.text.toString(),date,category,accountId),dateData,priceData)
                 money_datas_list.datas = money_datas_list.datas.distinct().toMutableList()
-                money_datas_list.datas.sortWith(compareByDescending<MoneyProfileData> { it.date.year }.thenByDescending { it.date.month }
-                    .thenByDescending { it.date.day }.thenByDescending { it.date.type })
+                money_datas_list.datas.sortWith(compareByDescending<MoneyProfileData> { it.date.date.year }.thenByDescending { it.date.date.month }
+                    .thenByDescending { it.date.date.day }.thenByDescending { it.date.type })
                 btn_total.callOnClick()
                 dlg.dismiss()
                 text_alarm.text = ""
@@ -445,7 +442,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
         return false
     }
 
-    override fun calTotal(deleteConsum: Int, deletePrice: Long, addConsum: Int, addPrice: Long) {
+    override fun calTotal(deleteConsum: Int, deletePrice: Int, addConsum: Int, addPrice: Int) {
         if(deleteConsum == 0)
             totalPrice -= deletePrice
         else
@@ -490,8 +487,9 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
     //-----------------------------------------------------------------------
 
     private fun postAccount(accessToken: String, account: Account) {
-        RetrofitBuild.api.postAccount(accessToken, account).enqueue(object : Callback<ResultAccount> {
-            override fun onResponse(call: Call<ResultAccount>, response: Response<ResultAccount>) {
+        RetrofitBuild.api.postAccount(accessToken, account).enqueue(object : Callback<ResultId> {
+            @SuppressLint("NotifyDataSetChanged")
+            override fun onResponse(call: Call<ResultId>, response: Response<ResultId>) {
                 if(response.isSuccessful) { // <--> response.code == 200
                     Log.d(TAG2, "연결성공")
                     val responseApi = response.body()
@@ -505,7 +503,60 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
                     Log.d(TAG2, "연결실패")
                 }
             }
-            override fun onFailure(call: Call<ResultAccount>, t: Throwable) { // code == 500
+            override fun onFailure(call: Call<ResultId>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
+    private fun getTransaction(accessToken: String){
+        RetrofitBuild.api.getTransaction(accessToken, accountId).enqueue(object : Callback<ResultTransactions> {
+            override fun onResponse(call: Call<ResultTransactions>, response: Response<ResultTransactions>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+                    responseApi!!.rows.forEach {
+                        MoneyProfileDataList.datas.add(MoneyProfileData(id=it.id, is_consuption = it.is_consuption, price = it.price, date = DateType(MoneyProfileData.PRICE_TYPE,it.date),detail = it.detail,category = it.category,account_id = it.account_id))
+                        MoneyProfileDataList.datas.add(MoneyProfileData(id=it.id, is_consuption = it.is_consuption, price = 0, date = DateType(MoneyProfileData.DATE_TYPE,it.date),detail = "",category = 0,account_id = it.account_id))
+                    }
+                    money_datas_list.datas = money_datas_list.datas.distinct().toMutableList()
+                    money_datas_list.datas.sortWith(compareByDescending<MoneyProfileData> { it.date.date.year }.thenByDescending { it.date.date.month }
+                        .thenByDescending { it.date.date.day }.thenByDescending { it.date.type })
+                    btn_total.callOnClick()
+                } else { // code == 400
+                    Log.d(TAG2, "연결실패")
+                }
+            }
+            override fun onFailure(call: Call<ResultTransactions>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
+    private fun postTransaction(accessToken: String, transaction: Transaction,dateData: MoneyProfileData, priceData: MoneyProfileData) {
+        RetrofitBuild.api.postTransaction(accessToken, transaction).enqueue(object : Callback<ResultId> {
+            @SuppressLint("NotifyDataSetChanged")
+            override fun onResponse(call: Call<ResultId>, response: Response<ResultId>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    dateData.id = responseApi!!.id
+                    priceData.id = responseApi.id
+                    money_datas_list.datas.apply {
+                        add(dateData)
+                        add(priceData)
+                    }
+                    Log.d(TAG2,responseApi.toString())
+                } else { // code == 400
+                    Log.d(TAG2, "연결실패")
+                }
+            }
+            override fun onFailure(call: Call<ResultId>, t: Throwable) { // code == 500
                 // 실패 처리
                 Log.d(TAG2, "인터넷 네트워크 문제")
                 Log.d(TAG2, t.toString())

@@ -224,8 +224,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun postAccount(accessToken: String, account: Account) {
-        RetrofitBuild.api.postAccount(accessToken, account).enqueue(object : Callback<ResultAccount> {
-            override fun onResponse(call: Call<ResultAccount>, response: Response<ResultAccount>) {
+        RetrofitBuild.api.postAccount(accessToken, account).enqueue(object : Callback<ResultId> {
+            override fun onResponse(call: Call<ResultId>, response: Response<ResultId>) {
                 if(response.isSuccessful) { // <--> response.code == 200
                     Log.d(TAG2, "연결성공")
                     val responseApi = response.body()
@@ -239,7 +239,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     Log.d(TAG2, "연결실패")
                 }
             }
-            override fun onFailure(call: Call<ResultAccount>, t: Throwable) { // code == 500
+            override fun onFailure(call: Call<ResultId>, t: Throwable) { // code == 500
                 // 실패 처리
                 Log.d(TAG2, "인터넷 네트워크 문제")
                 Log.d(TAG2, t.toString())
