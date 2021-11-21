@@ -194,6 +194,7 @@ class LoginActivity : AppCompatActivity() {
                     mainIntent.putExtra("access_token", responseApi.access_token)
                     mainIntent.putExtra("refresh_token",responseApi.refresh_token)
                     mainIntent.putExtra("userId",email)
+                    mainIntent.putExtra("userName",responseApi.name)
                     startActivity(mainIntent)
                 } else {
                     val responseApi = response.body()
@@ -225,6 +226,7 @@ class LoginActivity : AppCompatActivity() {
                             mainIntent.putExtra("access_token", responseApi.access_token)
                             mainIntent.putExtra("refresh_token",responseApi.refresh_token)
                             mainIntent.putExtra("userId",userId)
+                            mainIntent.putExtra("userName",responseApi.name)
                             startActivity(mainIntent)
                         }
                     }

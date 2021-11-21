@@ -12,6 +12,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.Window
 import android.widget.*
+import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.RecyclerView
@@ -163,8 +164,8 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
     }
 
     private fun initTotalPrice(){
-        val plus = money_datas_list.datas.filter{it.is_consuption == 0}
-        val minus = money_datas_list.datas.filter { it.is_consuption == 1}
+        val plus = money_datas_list.datas.filter{it.is_consumption == 0}
+        val minus = money_datas_list.datas.filter { it.is_consumption == 1}
         plus.forEach { totalPrice += it.price }
         minus.forEach { totalPrice -= it.price }
         val format = DecimalFormat("#,###")
@@ -172,14 +173,25 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
         text_price.text = strPrice + "원"
     }
 
-    private fun calTotalPrice(is_consumtion: Int, price: Int){
-        if(is_consumtion == 0)
+    private fun calTotalPrice(is_consumption: Int, price: Int){
+        if(is_consumption == 0)
             totalPrice += price
         else
             totalPrice -= price
         val format = DecimalFormat("#,###")
         val strPrice = format.format(totalPrice)
+
         text_price.text = strPrice + "원"
+        if(totalPrice < 0)
+            text_price.setTextColor(
+                ContextCompat.getColor(this,
+                    R.color.red
+                ))
+        else
+            text_price.setTextColor(
+                ContextCompat.getColor(this,
+                    R.color.logoBlue
+                ))
     }
 
     //변수 초기화 및 세팅
@@ -209,7 +221,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
         naviView.setNavigationItemSelectedListener(this)// 네비게이션 메뉴 아이템에 클릭 속성 부여
 
         SpinnerArray.sData = category.category
-        SpinnerArray.sData2 = consumtion.consumtion
+        SpinnerArray.sData2 = consumption.consumption
     }
 
     //token과 유저정보 가져옴
@@ -265,7 +277,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
     @SuppressLint("NotifyDataSetChanged")
     private fun incomeInitRecycler() {
         money_datas_list.datas.apply {
-            val filterDatas = (money_datas_list.datas.filter{(it.date.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.date.year == (ThisTime.cal.get(Calendar.YEAR).toString())) && (it.is_consuption == 0)}).toMutableList()
+            val filterDatas = (money_datas_list.datas.filter{(it.date.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.date.year == (ThisTime.cal.get(Calendar.YEAR).toString())) && (it.is_consumption == 0)}).toMutableList()
             money_profileAdapter.datas = filterDatas
             money_profileAdapter.notifyDataSetChanged()
         }
@@ -275,7 +287,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
     @SuppressLint("NotifyDataSetChanged")
     private fun expenseInitRecycler() {
         money_datas_list.datas.apply {
-            val filterDatas = (money_datas_list.datas.filter{(it.date.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.date.year == (ThisTime.cal.get(Calendar.YEAR).toString())) && (it.is_consuption == 1)}).toMutableList()
+            val filterDatas = (money_datas_list.datas.filter{(it.date.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.date.year == (ThisTime.cal.get(Calendar.YEAR).toString())) && (it.is_consumption == 1)}).toMutableList()
             money_profileAdapter.datas = filterDatas
             money_profileAdapter.notifyDataSetChanged()
         }
@@ -326,16 +338,10 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
 
         val c = System.currentTimeMillis()
         val a = Date(c)
-        val time = tf.format(a)
 
         val strYear = yf.format(a)
         val strMonth = mf.format(a)
         val strDay = qf.format(a)
-
-        val date = Date(String.format("%02d", year.value),
-            String.format("%02d", month.value),
-            String.format("%02d", day.value),
-            time)
 
         year.value = strYear.toInt()
         month.value = strMonth.toInt()
@@ -377,31 +383,31 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
             }
         }
 
-        val dateData = MoneyProfileData(
-            id = 0, is_consuption = is_consumtion, price = 0, detail = "", date = DateType(
-                MoneyProfileData.DATE_TYPE, date
-            ),
-            category = 0, account_id = accountId
-        )
-
-        val priceData = MoneyProfileData(
-            id = 0, is_consuption = is_consumtion, price = et_price.text.toString().toInt(),
-            detail = et_detail.text.toString(), date = DateType(
-                MoneyProfileData.PRICE_TYPE, date
-            ), category = category, account_id = accountId
-        )
-
         btn_choice.setOnClickListener {
             if(et_detail.text.toString() == "" || et_price.text.toString() == ""){
                 text_alarm.text = "사용내역과 금액을 입력해 주세요."
             }
             else {
+                val date = Date(String.format("%02d", year.value),
+                    String.format("%02d", month.value),
+                    String.format("%02d", day.value),)
                 calTotalPrice(is_consumtion,et_price.text.toString().toInt())
-                postTransaction(bearerAccessToken, Transaction(is_consumtion,et_price.text.toString().toInt(),et_detail.text.toString(),date,category,accountId),dateData,priceData)
-                money_datas_list.datas = money_datas_list.datas.distinct().toMutableList()
-                money_datas_list.datas.sortWith(compareByDescending<MoneyProfileData> { it.date.date.year }.thenByDescending { it.date.date.month }
-                    .thenByDescending { it.date.date.day }.thenByDescending { it.date.type })
-                btn_total.callOnClick()
+                val dateData = MoneyProfileData(
+                    is_consumption = is_consumtion, price = 0, detail = "", date = DateType(
+                        0, MoneyProfileData.DATE_TYPE, date
+                    ),
+                    category = 0, account_id = accountId
+                )
+
+                val priceData = MoneyProfileData(
+                    is_consumption = is_consumtion, price = et_price.text.toString().toInt(),
+                    detail = et_detail.text.toString(), date = DateType(
+                        0,MoneyProfileData.PRICE_TYPE, date
+                    ), category = category, account_id = accountId
+                )
+
+                val transaction = Transaction(is_consumption = is_consumtion,price = et_price.text.toString().toInt(),detail = et_detail.text.toString(),date="${year.value}-${month.value}-${day.value}",category = category,account_id = accountId)
+                postTransaction(bearerAccessToken, transaction, dateData, priceData)
                 dlg.dismiss()
                 text_alarm.text = ""
             }
@@ -454,6 +460,16 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
         val format = DecimalFormat("#,###")
         val strPrice = format.format(totalPrice)
         text_price.text = strPrice + "원"
+        if(totalPrice < 0)
+            text_price.setTextColor(
+                ContextCompat.getColor(this,
+                R.color.red
+            ))
+        else
+            text_price.setTextColor(
+                ContextCompat.getColor(this,
+                    R.color.logoBlue
+                ))
     }
 
     //-----------------------------------------------------------------------
@@ -519,8 +535,10 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
                     val responseApi = response.body()
                     Log.d(TAG2,responseApi.toString())
                     responseApi!!.rows.forEach {
-                        MoneyProfileDataList.datas.add(MoneyProfileData(id=it.id, is_consuption = it.is_consuption, price = it.price, date = DateType(MoneyProfileData.PRICE_TYPE,it.date),detail = it.detail,category = it.category,account_id = it.account_id))
-                        MoneyProfileDataList.datas.add(MoneyProfileData(id=it.id, is_consuption = it.is_consuption, price = 0, date = DateType(MoneyProfileData.DATE_TYPE,it.date),detail = "",category = 0,account_id = it.account_id))
+                        var arr = it.date.split("-")
+                        MoneyProfileDataList.datas.add(MoneyProfileData(is_consumption = it.is_consumption, price = it.price, date = DateType(it.id, MoneyProfileData.PRICE_TYPE,Date(year = arr[0], month = arr[1], day = arr[2])),detail = it.detail,category = it.category,account_id = it.account_id))
+                        MoneyProfileDataList.datas.add(MoneyProfileData(is_consumption = it.is_consumption, price = 0, date = DateType(-1, MoneyProfileData.DATE_TYPE,Date(year = arr[0], month = arr[1], day = arr[2])),detail = "",category = 0,account_id = it.account_id))
+                        calTotalPrice(it.is_consumption, it.price)
                     }
                     money_datas_list.datas = money_datas_list.datas.distinct().toMutableList()
                     money_datas_list.datas.sortWith(compareByDescending<MoneyProfileData> { it.date.date.year }.thenByDescending { it.date.date.month }
@@ -545,12 +563,17 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
                 if(response.isSuccessful) { // <--> response.code == 200
                     Log.d(TAG2, "연결성공")
                     val responseApi = response.body()
-                    dateData.id = responseApi!!.id
-                    priceData.id = responseApi.id
+                    dateData.date.id = -1
+                    priceData.date.id = responseApi!!.id
                     money_datas_list.datas.apply {
                         add(dateData)
                         add(priceData)
                     }
+                    money_datas_list.datas = money_datas_list.datas.distinct().toMutableList()
+                    money_datas_list.datas.sortWith(compareByDescending<MoneyProfileData> { it.date.date.year }.thenByDescending { it.date.date.month }
+                        .thenByDescending { it.date.date.day }.thenByDescending { it.date.type })
+                    Log.d("!!!!!!!!!!!!!!!!!!!!!",money_datas_list.datas.toString())
+                    btn_total.callOnClick()
                     Log.d(TAG2,responseApi.toString())
                 } else { // code == 400
                     Log.d(TAG2, "연결실패")

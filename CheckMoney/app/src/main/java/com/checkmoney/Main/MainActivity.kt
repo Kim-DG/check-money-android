@@ -13,6 +13,7 @@ import android.view.View
 import android.view.Window
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.RecyclerView
@@ -29,6 +30,8 @@ import retrofit2.Response
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
     private var mBackWait:Long = 0
+    private val gson = Gson()
+    private val type = object : TypeToken<ErrorResult>() {}.type
 
     private lateinit var profileAdapter: ProfileAdapter
     private lateinit var layout_drawer: DrawerLayout
@@ -38,13 +41,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var btn_logout: TextView
     private lateinit var naviView: NavigationView
     private lateinit var text_email: TextView
+    private lateinit var text_name: TextView
 
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var access_token: String
     private lateinit var refresh_token: String
     private lateinit var user_email: String
+    private lateinit var user_name: String
     private lateinit var bearerAccessToken: String
 
+    private var refreshToken = RefreshToken(refresh_token = "")
     private val TAG = "MainActivity"
     private val TAG2 = "MainActivity_API"
     private var accountId = -1
@@ -89,6 +95,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         rv_profile = nav_header.findViewById(R.id.rv_profile)
         btn_logout = nav_header.findViewById(R.id.text_logout)
         text_email = nav_header.findViewById(R.id.text_email)
+        text_name = nav_header.findViewById(R.id.text_name)
 
         naviView.setNavigationItemSelectedListener(this)// 네비게이션 메뉴 아이템에 클릭 속성 부여
     }
@@ -110,7 +117,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         access_token = intent.getStringExtra("access_token")!!
         refresh_token = intent.getStringExtra("refresh_token")!!
         user_email = intent.getStringExtra("userId")!!
+        user_name = intent.getStringExtra("userName")!!
         text_email.text = user_email
+        text_name.text = user_name
+
+        refreshToken.refresh_token = refresh_token
         bearerAccessToken = "Bearer $access_token"
     }
 
@@ -212,7 +223,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     Log.d(TAG2,responseApi.toString())
                     initRecycler(response.body()!!.rows)
                 } else { // code == 400
+                    val errorResponse: ErrorResult? = gson.fromJson(response.errorBody()!!.charStream(), type)
                     Log.d(TAG2, "연결실패")
+                    when(errorResponse!!.code){
+                        40300 -> {
+                            postRefresh(refreshToken)
+                            getAccount(bearerAccessToken)
+                        }
+
+                    }
                 }
             }
             override fun onFailure(call: Call<ResultAccountList>, t: Throwable) { // code == 500
@@ -240,6 +259,32 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
             }
             override fun onFailure(call: Call<ResultId>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
+    private fun postRefresh(refreshToken: RefreshToken){
+        RetrofitBuild.api.postRefresh(refreshToken).enqueue(object : Callback<ResultAndToken> {
+            override fun onResponse(call: Call<ResultAndToken>, response: Response<ResultAndToken>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+                    access_token = responseApi!!.access_token!!
+                    bearerAccessToken = "Bearer $access_token"
+                } else { // code == 400
+                    Log.d(TAG2, "연결실패")
+                    AppPref.prefs.clearUser(this@MainActivity)
+                    googleSignOut()
+                    val loginIntent = Intent(this@MainActivity, LoginActivity::class.java)
+                    startActivity(loginIntent)
+                    finish()
+                }
+            }
+            override fun onFailure(call: Call<ResultAndToken>, t: Throwable) { // code == 500
                 // 실패 처리
                 Log.d(TAG2, "인터넷 네트워크 문제")
                 Log.d(TAG2, t.toString())

@@ -47,28 +47,28 @@ data class AccountModel(
 
 data class TransactionModel(
     var id: Int,
-    var is_consuption: Int,
+    var is_consumption: Int,
     var price: Int,
     var detail: String,
-    var date: Date,
+    var date: String,
     var category: Int,
     var account_id: Int
 )
 
 data class Transaction(
-    var is_consuption: Int,
+    var is_consumption: Int,
     var price: Int,
     var detail: String,
-    var date: Date,
+    var date: String,
     var category: Int,
     var account_id: Int
 )
 
 data class EditTransaction(
-    var is_consuption: Int,
+    var is_consumption: Int,
     var price: Int,
     var detail: String,
-    var date: Date,
+    var date: String,
     var category: Int,
 )
 //response
@@ -83,7 +83,9 @@ data class ResultAndToken(
     var code: Int,
     var message: String?,
     var access_token: String?,
-    var refresh_token: String?
+    var refresh_token: String?,
+    var user_id: Int,
+    var name: String
 )
 //response
 data class ResultAccountList(
@@ -119,7 +121,7 @@ data class ErrorResult(
 data class ProfileData(var title: String, var description: String, var id: Int): Parcelable {}
 
 @Parcelize
-data class MoneyProfileData(var id: Int, var is_consuption: Int, var price: Int, var detail: String, var date: DateType, var category: Int, var account_id: Int): Parcelable {
+data class MoneyProfileData(var is_consumption: Int, var price: Int, var detail: String, var date: DateType, var category: Int, var account_id: Int): Parcelable {
     companion object {
         const val PRICE_TYPE = 0
         const val DATE_TYPE = 1
@@ -127,10 +129,10 @@ data class MoneyProfileData(var id: Int, var is_consuption: Int, var price: Int,
 }
 
 @Parcelize
-data class DateType(var type: Int, var date: Date): Parcelable{}
+data class DateType(var id: Int, var type: Int, var date: Date): Parcelable{}
 
 @Parcelize
-data class Date(var year: String, var month: String, var day: String, var time: String): Parcelable{}
+data class Date(var year: String, var month: String, var day: String): Parcelable{}
 
 
 object MoneyProfileDataList{
@@ -161,7 +163,7 @@ object category{
     val category: ArrayList<String> = arrayListOf("식비","쇼핑","주거비","의료비","생활용품비","통신비","교통비","기타")
 }
 
-object consumtion{
-    val consumtion: ArrayList<String> = arrayListOf("수입", "지출")
+object consumption{
+    val consumption: ArrayList<String> = arrayListOf("수입", "지출")
 }
 
