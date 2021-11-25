@@ -187,9 +187,9 @@ class LoginActivity : AppCompatActivity() {
         RetrofitBuild.api.postGoogle(idToken).enqueue(object : Callback<ResultAndToken>{
             override fun onResponse(call: Call<ResultAndToken>, response: Response<ResultAndToken>) {
                 if(response.isSuccessful) {
-                    Log.d(TAG2, "연결성공")
+                    Log.d("$TAG2 - postGoogle", "연결성공")
                     val responseApi = response.body()!!
-                    Log.d(TAG2,responseApi.toString())
+                    Log.d("$TAG2 - postGoogle",responseApi.toString())
                     val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
                     mainIntent.putExtra("access_token", responseApi.access_token)
                     mainIntent.putExtra("refresh_token",responseApi.refresh_token)
@@ -198,14 +198,14 @@ class LoginActivity : AppCompatActivity() {
                     startActivity(mainIntent)
                 } else {
                     val responseApi = response.body()
-                    Log.d(TAG2,responseApi.toString())
-                    Log.d(TAG2, "연결실패")
+                    Log.d("$TAG2 - postGoogle",responseApi.toString())
+                    Log.d("$TAG2 - postGoogle", "연결실패")
                 }
             }
             override fun onFailure(call: Call<ResultAndToken>, t: Throwable) { // code == 500
                 // 실패 처리
-                Log.d(TAG2, "인터넷 네트워크 문제")
-                Log.d(TAG2, t.toString())
+                Log.d("$TAG2 - postGoogle", "인터넷 네트워크 문제")
+                Log.d("$TAG2 - postGoogle", t.toString())
             }
         })
     }
@@ -214,12 +214,12 @@ class LoginActivity : AppCompatActivity() {
         RetrofitBuild.api.postLogin(userInfo).enqueue(object : Callback<ResultAndToken>{
             override fun onResponse(call: Call<ResultAndToken>, response: Response<ResultAndToken>) {
                 if(response.isSuccessful) { // <--> response.code == 200
-                    Log.d(TAG2, "연결성공")
+                    Log.d("$TAG2 - postLogin", "연결성공")
                     val responseApi = response.body()
-                    Log.d(TAG2,responseApi.toString())
+                    Log.d("$TAG2 - postLogin",responseApi.toString())
                     if (responseApi != null) {
                         if (responseApi.result) {
-                            Log.d(TAG2, "로그인 성공")
+                            Log.d("$TAG2 - postLogin", "로그인 성공")
                             AppPref.prefs.myId = userId
                             AppPref.prefs.myPw = userPw
                             val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
@@ -232,8 +232,8 @@ class LoginActivity : AppCompatActivity() {
                     }
                 } else {
                     val errorResponse: ErrorResult? = gson.fromJson(response.errorBody()!!.charStream(), type)
-                    Log.d(TAG2, errorResponse.toString())
-                    Log.d(TAG2, "연결실패")
+                    Log.d("$TAG2 - postLogin", errorResponse.toString())
+                    Log.d("$TAG2 - postLogin", "연결실패")
                     when(errorResponse!!.code){
                         40007 -> text_discorrect.text = "회원정보가 존재하지 않습니다."
                         40008 -> text_discorrect.text = "아이디/비밀번호가 일치하지 않습니다."
@@ -242,8 +242,8 @@ class LoginActivity : AppCompatActivity() {
             }
             override fun onFailure(call: Call<ResultAndToken>, t: Throwable) { // code == 500
                 // 실패 처리
-                Log.d(TAG2, "인터넷 네트워크 문제")
-                Log.d(TAG2, t.toString())
+                Log.d("$TAG2 - postLogin", "인터넷 네트워크 문제")
+                Log.d("$TAG2 - postLogin", t.toString())
                 text_discorrect.text = "네트워크 문제가 발생했습니다."
             }
         })

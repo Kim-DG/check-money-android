@@ -3,6 +3,8 @@ package com.checkmoney.Login
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.CountDownTimer
 import android.text.Editable
 import android.text.TextWatcher
@@ -55,8 +57,8 @@ class JoinPopupActivity(context : Context): Dialog(context) {
         dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
         dlg.setContentView(R.layout.activity_join_popup)     //다이얼로그에 사용할 xml 파일을 불러옴
         dlg.window!!.setLayout(WindowManager.LayoutParams.MATCH_PARENT,WindowManager.LayoutParams.WRAP_CONTENT)
+        dlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dlg.setCancelable(false)
-
 
         setVariable()
         pw_check()

@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -65,6 +67,7 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
                 val dlg = Dialog(context)
                 dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
                 dlg.setContentView(R.layout.wallet_edit_dialog)     //다이얼로그에 사용할 xml 파일을 불러옴
+                dlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                 dlg.show()
 
                 val et_editname = dlg.findViewById<EditText>(R.id.et_editname)
@@ -91,6 +94,7 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
                 val dlg = Dialog(context)
                 dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
                 dlg.setContentView(R.layout.wallet_delete_dialog)     //다이얼로그에 사용할 xml 파일을 불러옴
+                dlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                 dlg.show()
 
                 val btn_delete = dlg.findViewById<Button>(R.id.btn_delete)

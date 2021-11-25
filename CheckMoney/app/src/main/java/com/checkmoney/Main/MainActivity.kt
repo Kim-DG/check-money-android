@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.DialogInterface
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.Point
+import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -77,6 +79,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         btn_logout.setOnClickListener {
+            ProfileDataList.datas.clear()
             AppPref.prefs.clearUser(this)
             googleSignOut()
             val loginIntent = Intent(this, LoginActivity::class.java)
@@ -105,8 +108,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val display = windowManager.defaultDisplay // in case of Activity
         val size = Point()
         display.getRealSize(size) // or getSize(size)
-        val width = size.x * (0.66)
-        val height = size.y * (0.66)
+        val width = size.x * (0.8)
+        val height = size.y * (0.6)
         nav_header.layoutParams.height = height.toInt()
         naviView.layoutParams.width= width.toInt()
     }
@@ -144,12 +147,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     // 네비게이션 메뉴 아이템 클릭 시 수행
     @SuppressLint("NotifyDataSetChanged")
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
-
         when (item.itemId) {
             R.id.add -> {
                 val dlg = Dialog(this@MainActivity)
                 dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
                 dlg.setContentView(R.layout.wallet_create_dialog)     //다이얼로그에 사용할 xml 파일을 불러옴
+                dlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                 dlg.show()
 
                 val et_wname = dlg.findViewById<EditText>(R.id.et_wname)

@@ -8,11 +8,12 @@
     <application
         android:name=".AppPref"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:icon="@mipmap/ic_main"
+        android:label="Check\nMoney"
+        android:roundIcon="@mipmap/ic_main_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.CheckMoney">
+        android:theme="@style/Theme.CheckMoney"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".WalletActivity"
             android:exported="false" />

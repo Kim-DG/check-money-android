@@ -3,6 +3,8 @@ package com.checkmoney
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -98,6 +100,7 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
                 val dlg = Dialog(context)
                 dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
                 dlg.setContentView(R.layout.dialog_datepicker_edit)     //다이얼로그에 사용할 xml 파일을 불러옴
+                dlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                 dlg.show()
 
                 val et_detail = dlg.findViewById<EditText>(R.id.et_detail)
@@ -113,10 +116,10 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
                 val month : NumberPicker = dlg.findViewById(R.id.monthpicker_datepicker)
                 val day : NumberPicker = dlg.findViewById(R.id.daypicker_datepicker)
 
-                val adapter = ArrayAdapter(context, android.R.layout.simple_expandable_list_item_1, SpinnerArray.sData)
+                val adapter = ArrayAdapter(context, R.layout.spinner_layout, SpinnerArray.sData)
                 spinner.adapter = adapter
 
-                val adapter2 = ArrayAdapter(context,android.R.layout.simple_expandable_list_item_1, SpinnerArray.sData2)
+                val adapter2 = ArrayAdapter(context, R.layout.spinner_layout, SpinnerArray.sData2)
                 spinner2.adapter = adapter2
 
                 year.wrapSelectorWheel = false
@@ -142,8 +145,6 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
 
                 val c = System.currentTimeMillis()
                 val a = Date(c)
-                val tf = SimpleDateFormat("yyyyMMddHHmmssSSZZ")
-                val time = tf.format(a)
 
                 val yf = SimpleDateFormat("yyyy")
                 val mf = SimpleDateFormat("MM")
@@ -284,6 +285,7 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
                     val deletedlg = Dialog(context)
                     deletedlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
                     deletedlg.setContentView(R.layout.wallet_delete_dialog)     //다이얼로그에 사용할 xml 파일을 불러옴
+                    deletedlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                     deletedlg.show()
 
                     val btn_delete_confirm = deletedlg.findViewById<Button>(R.id.btn_delete)
