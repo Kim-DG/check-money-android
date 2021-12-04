@@ -20,6 +20,14 @@ import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.checkmoney.Login.JoinPopupActivity
+import com.github.mikephil.charting.animation.Easing
+import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.components.Legend
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
+import com.github.mikephil.charting.formatter.PercentFormatter
+import com.github.mikephil.charting.utils.ColorTemplate
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -51,6 +59,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var user_email: String
     private lateinit var user_name: String
     private lateinit var bearerAccessToken: String
+    private lateinit var pieChart: PieChart
 
     private var refreshToken = RefreshToken(refresh_token = "")
     private val TAG = "MainActivity"
@@ -71,6 +80,58 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         getExtraLogin()
 
         getAccount(bearerAccessToken)
+
+        pieChart = findViewById(R.id.pieChart)
+
+        pieChart.setUsePercentValues(true)
+        pieChart.description.text = ""
+        pieChart.setTouchEnabled(true)
+        pieChart.isRotationEnabled = true
+        //차트안에 항목이름
+        pieChart.setDrawEntryLabels(true)
+        //하단항목이름
+        pieChart.legend.isEnabled = false
+        //pieChart.legend.orientation = Legend.LegendOrientation.HORIZONTAL
+        //pieChart.legend.isWordWrapEnabled = true
+
+        pieChart.setUsePercentValues(true)
+        val dataEntries = ArrayList<PieEntry>()
+        dataEntries.add(PieEntry(56f, "식비"))
+        dataEntries.add(PieEntry(26f, "교통비"))
+        dataEntries.add(PieEntry(10f, "생활용품비"))
+        dataEntries.add(PieEntry(6f, "주거비"))
+        dataEntries.add(PieEntry(2f, "쇼핑"))
+
+        val colors: ArrayList<Int> = ArrayList()
+        colors.add(Color.parseColor("#0096FF"))
+        colors.add(Color.parseColor("#0064FF"))
+        colors.add(Color.parseColor("#4C39E1"))
+        colors.add(Color.parseColor("#FFF176"))
+        colors.add(Color.parseColor("#FF8A65"))
+
+        val dataSet = PieDataSet(dataEntries, "")
+        val data = PieData(dataSet)
+
+        // In Percentage
+        data.setValueFormatter(PercentFormatter())
+        // 항목간 여백 길이
+        dataSet.sliceSpace = 1f
+        dataSet.colors = colors
+        pieChart.data = data
+        data.setValueTextSize(15f)
+        pieChart.setExtraOffsets(5f, 10f, 5f, 5f)
+        pieChart.animateY(1400, Easing.EaseInOutQuad)
+
+        // 구멍의 지름
+        pieChart.holeRadius = 40f
+        // 흰색 원 지름
+        pieChart.transparentCircleRadius = 45f
+        // 차트안 구멍 생성
+        pieChart.isDrawHoleEnabled = true
+        // 구멍 색
+        pieChart.setHoleColor(Color.WHITE)
+
+        pieChart.invalidate()
 
         btn_navi.setOnClickListener {
             layout_drawer.openDrawer(GravityCompat.START)
@@ -99,6 +160,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         btn_logout = nav_header.findViewById(R.id.text_logout)
         text_email = nav_header.findViewById(R.id.text_email)
         text_name = nav_header.findViewById(R.id.text_name)
+        pieChart = findViewById(R.id.pieChart)
 
         naviView.setNavigationItemSelectedListener(this)// 네비게이션 메뉴 아이템에 클릭 속성 부여
     }
