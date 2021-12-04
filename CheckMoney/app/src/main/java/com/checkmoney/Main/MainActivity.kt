@@ -109,7 +109,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val size = Point()
         display.getRealSize(size) // or getSize(size)
         val width = size.x * (0.8)
-        val height = size.y * (0.6)
+        val height = size.y * (0.7)
         nav_header.layoutParams.height = height.toInt()
         naviView.layoutParams.width= width.toInt()
     }
@@ -169,7 +169,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     dlg.dismiss()
                 }
             }
-            R.id.test2 -> Toast.makeText(applicationContext, "test2", Toast.LENGTH_SHORT).show()
+            R.id.home -> {
+                val mainIntent = Intent(this, MainActivity::class.java)
+                mainIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                startActivity(mainIntent)
+            }
             R.id.test3 -> Toast.makeText(applicationContext, "test3", Toast.LENGTH_SHORT).show()
         }
         return false

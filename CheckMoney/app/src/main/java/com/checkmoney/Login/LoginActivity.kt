@@ -30,6 +30,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var btn_join: Button
     private lateinit var btn_login: Button
+    private lateinit var btn_findPassword: TextView
     private lateinit var btn_signInButton: SignInButton
     private lateinit var et_id: EditText
     private lateinit var et_pw: EditText
@@ -82,9 +83,12 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-
         btn_signInButton.setOnClickListener {
             GoogleSignIn()
+        }
+
+        btn_findPassword.setOnClickListener {
+            //구현예정
         }
     }
 
@@ -100,6 +104,7 @@ class LoginActivity : AppCompatActivity() {
         btn_join = findViewById(R.id.btn_join)
         btn_login = findViewById(R.id.btn_login)
         btn_signInButton = findViewById(R.id.sign_in_button)
+        btn_findPassword = findViewById(R.id.btn_findpasword)
         et_id = findViewById(R.id.et_id)
         et_pw = findViewById(R.id.et_pw)
         text_discorrect = findViewById(R.id.text_discorrect)

@@ -64,6 +64,19 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
                 }.run { context.startActivity(this) }
             }
 
+            text_description.setOnClickListener {
+                Intent(context, WalletActivity::class.java).apply {
+                    layout.closeDrawers()
+                    MoneyProfileDataList.datas.clear()
+                    putExtra("data",item)
+                    putExtra("access_token",access_token)
+                    putExtra("refresh_token",refresh_token)
+                    putExtra("userId",user_email)
+                    putExtra("accountId",item.id)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }.run { context.startActivity(this) }
+            }
+
             text_edit.setOnClickListener {
                 val dlg = Dialog(context)
                 dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거

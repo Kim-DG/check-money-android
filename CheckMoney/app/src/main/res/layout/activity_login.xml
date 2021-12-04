@@ -60,15 +60,37 @@
                 android:textColor="@color/black"
                 android:textColorHint="#D3D3D3"/>
 
-            <TextView
-                android:id="@+id/text_discorrect"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="right"
-                android:text=""
-                android:textSize="12sp"
-                android:fontFamily="@font/spoqahansansneo_medium"
-                android:textColor="@color/red"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btn_findpasword"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Forgot password?"
+                    android:fontFamily="@font/spoqahansansneo_medium"
+                    android:textColor="@color/logoBlue"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+
+                <TextView
+                    android:id="@+id/text_discorrect"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:text=""
+                    android:textSize="12sp"
+                    android:fontFamily="@font/spoqahansansneo_medium"
+                    android:textColor="@color/red"/>
+
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout

@@ -6,9 +6,9 @@
             android:icon="@drawable/ic_baseline_add_box_24"
             android:title="통장 추가" />
 
-        <item android:id="@+id/test2"
-            android:icon="@drawable/ic_baseline_menu_64"
-            android:title="test2"/>
+        <item android:id="@+id/home"
+            android:icon="@drawable/ic_baseline_house_24"
+            android:title="홈 화면"/>
 
         <item android:id="@+id/test3"
             android:icon="@drawable/ic_baseline_menu_64"
