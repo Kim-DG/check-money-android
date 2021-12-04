@@ -68,8 +68,6 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
     private val mf = SimpleDateFormat("MM")
     @SuppressLint("SimpleDateFormat")
     private val qf = SimpleDateFormat("dd")
-    @SuppressLint("SimpleDateFormat")
-    private val tf = SimpleDateFormat("yyyyMMddHHmmssSSZZ")
 
     private var totalPrice: Long = 0
     private var accountId = -1
@@ -253,7 +251,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
     //통장목록표시
     @SuppressLint("NotifyDataSetChanged")
     private fun menuRecycler() {
-        profileAdapter = ProfileAdapter(this,access_token,refresh_token,user_email,accountId)
+        profileAdapter = ProfileAdapter(this,access_token,refresh_token,user_email,accountId,layout_drawer)
         rv_profile.adapter = profileAdapter
 
         ProfileDataList.datas.apply {
@@ -474,6 +472,15 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
                 ContextCompat.getColor(this,
                     R.color.logoBlue
                 ))
+    }
+
+    override fun onBackPressed() {
+        if (layout_drawer.isDrawerOpen(GravityCompat.START)) {
+            layout_drawer.closeDrawer(GravityCompat.START);
+        }
+        else {
+            super.onBackPressed()
+        }
     }
 
     //-----------------------------------------------------------------------

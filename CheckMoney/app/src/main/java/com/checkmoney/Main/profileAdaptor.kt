@@ -20,7 +20,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class ProfileAdapter(private val context: Context, private val access_token: String, private val refresh_token: String, private val user_email: String, private val accountid: Int) : RecyclerView.Adapter<ProfileAdapter.ViewHolder>() {
+class ProfileAdapter(private val context: Context, private val access_token: String, private val refresh_token: String, private val user_email: String, private val accountid: Int,private  val layout: DrawerLayout) : RecyclerView.Adapter<ProfileAdapter.ViewHolder>() {
 
     val TAG = "ProfileAdapter"
     val TAG2 = "ProfileAdapter_API"
@@ -53,6 +53,7 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
 
             text_wname.setOnClickListener {
                 Intent(context, WalletActivity::class.java).apply {
+                    layout.closeDrawers()
                     MoneyProfileDataList.datas.clear()
                     putExtra("data",item)
                     putExtra("access_token",access_token)

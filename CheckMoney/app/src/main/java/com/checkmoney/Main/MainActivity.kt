@@ -131,7 +131,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     //recycler항목 추가
     @SuppressLint("NotifyDataSetChanged")
     private fun initRecycler(accountList: ArrayList<AccountModel>) {
-        profileAdapter = ProfileAdapter(this,access_token,refresh_token,user_email,accountId)
+        profileAdapter = ProfileAdapter(this,access_token,refresh_token,user_email,accountId,layout_drawer)
         rv_profile.adapter = profileAdapter
 
         ProfileDataList.datas.apply {
@@ -177,13 +177,18 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     //뒤로가기 두번클릭 시 앱 종료
     override fun onBackPressed() {
-        if (System.currentTimeMillis() - mBackWait >= 2000) {
-            mBackWait = System.currentTimeMillis()
-            Toast.makeText(this, " 한 번 더 누르면 종료됩니다.", Toast.LENGTH_LONG).show()
-        } else {
-            finishAffinity()
-            System.runFinalization()
-            System.exit(0)
+        if (layout_drawer.isDrawerOpen(GravityCompat.START)) {
+            layout_drawer.closeDrawer(GravityCompat.START);
+        }
+        else {
+            if (System.currentTimeMillis() - mBackWait >= 2000) {
+                mBackWait = System.currentTimeMillis()
+                Toast.makeText(this, " 한 번 더 누르면 종료됩니다.", Toast.LENGTH_LONG).show()
+            } else {
+                finishAffinity()
+                System.runFinalization()
+                System.exit(0)
+            }
         }
     }
 
