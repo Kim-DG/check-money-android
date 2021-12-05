@@ -71,13 +71,22 @@ data class EditTransaction(
     var date: String,
     var category: Int,
 )
-//response
+
+data class EditMyInfo(
+    var img_url: String?,
+    var name: String,
+    var password: String,
+    var new_password: String
+)
+//-----------------------------------------------------------------------
+//                              Response
+//-----------------------------------------------------------------------
 data class Result(
     var result: Boolean,
     var code: Int,
     var message: String?
 )
-//response
+
 data class ResultAndToken(
     var result: Boolean,
     var code: Int,
@@ -87,7 +96,7 @@ data class ResultAndToken(
     var user_id: Int,
     var name: String
 )
-//response
+
 data class ResultAccountList(
     var result: Boolean,
     var code: Int,
@@ -95,7 +104,7 @@ data class ResultAccountList(
     var rows: ArrayList<AccountModel>,
     var count: Int
 )
-//response
+
 data class ResultTransactions(
     var result: Boolean,
     var code: Int,
@@ -103,14 +112,32 @@ data class ResultTransactions(
     var rows: ArrayList<TransactionModel>,
     var count: Int
 )
-//response
+
 data class ResultId(
     var result: Boolean,
     var code: Int,
     var message: String?,
     var id: Int
 )
-//response
+
+data class ResultMyInfo(
+    var result: Boolean,
+    var code: Int,
+    var message: String,
+    var id: Int,
+    var email: String,
+    var name: String,
+    var img_url: String?,
+    var provider: String
+)
+
+data class ResultImageUrl(
+    var result: Boolean,
+    var code: Int,
+    var message: String,
+    var url: String
+)
+
 data class ErrorResult(
     var result: Boolean,
     var code: Int,

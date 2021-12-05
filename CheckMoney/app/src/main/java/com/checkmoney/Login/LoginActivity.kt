@@ -46,15 +46,16 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        //변수 초기화
+        // 변수 초기화
         setVariable()
-        //id, pw입력
+        // id, pw입력
         checkInput()
-        //자동로그인
+        // 자동로그인
         autoLogin()
-        //구글로그인 세팅
+        // 구글로그인 세팅
         googleBuildIn()
 
+        // 회원가입
         btn_join.setOnClickListener{
             val dialog = JoinPopupActivity(this@LoginActivity)
             dialog.start()
@@ -92,14 +93,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == RC_SIGN_IN) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-            handleSignInResult(task)
-        }
-    }
-    //변수 초기화
+    // 변수 초기화
     private fun setVariable() {
         btn_join = findViewById(R.id.btn_join)
         btn_login = findViewById(R.id.btn_login)
@@ -110,25 +104,11 @@ class LoginActivity : AppCompatActivity() {
         text_discorrect = findViewById(R.id.text_discorrect)
     }
 
-    //자동로그인
-    private fun autoLogin() {
-        et_id.setText(AppPref.prefs.myId)
-        et_pw.setText(AppPref.prefs.myPw)
-
-        if(AppPref.prefs.myId.isNullOrBlank()
-            || AppPref.prefs.myPw.isNullOrBlank()) {
-        }
-        else { // SharedPreferences 안에 값이 저장되어 있을 때 -> MainActivity로 이동
-            val userInfo = UserInfo(AppPref.prefs.myId!!, AppPref.prefs.myPw!!)
-            postLogin(userInfo)
-        }
-    }
-
-    //id, pw입력
+    // id, pw입력
     private fun checkInput(){
         et_id.addTextChangedListener(object: TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
+            //text 입력중
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 userId = et_id.text.toString()
             }
@@ -136,13 +116,35 @@ class LoginActivity : AppCompatActivity() {
         })
         et_pw.addTextChangedListener(object: TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
+            //text 입력중
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 userPw = et_pw.text.toString()
             }
             override fun afterTextChanged(s: Editable?) {}
         })
     }
+
+    // 자동로그인
+    private fun autoLogin() {
+        et_id.setText(AppPref.prefs.myId)
+        et_pw.setText(AppPref.prefs.myPw)
+
+        // SharedPreferences 안에 값이 저장되어 있을 때 -> MainActivity로 이동
+        if(!(AppPref.prefs.myId.isNullOrBlank()
+            || AppPref.prefs.myPw.isNullOrBlank())) {
+            val userInfo = UserInfo(AppPref.prefs.myId!!, AppPref.prefs.myPw!!)
+            postLogin(userInfo)
+        }
+    }
+
+    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == RC_SIGN_IN) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            handleSignInResult(task)
+        }
+    }
+
     //-----------------------------------------------------------------------
     //                             Google Login
     //-----------------------------------------------------------------------

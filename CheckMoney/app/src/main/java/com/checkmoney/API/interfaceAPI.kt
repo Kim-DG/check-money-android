@@ -1,6 +1,7 @@
 package com.checkmoney
 
 import com.google.android.gms.common.internal.safeparcel.SafeParcelable
+import okhttp3.MultipartBody
 import retrofit2.Call
 import retrofit2.http.*
 
@@ -46,4 +47,14 @@ interface API{
 
     @DELETE ("api/transactions/{transactionId}")
     fun deleteTransaction(@Header("Authorization") access_token: String, @Path("transactionId") transactionId: Int): Call<Result>
+
+    @GET("api/users/my-info")
+    fun getMyInfo(@Header("Authorization") access_token: String): Call<ResultMyInfo>
+
+    @PUT("api/users/my-info")
+    fun putMyInfo(@Header("Authorization") access_token: String, @Body editMyInfo: EditMyInfo): Call<Result>
+
+    @Multipart
+    @POST("api/users/img")
+    fun postImage(@Header("Authorization") access_token: String, @Part file: MultipartBody.Part): Call<ResultImageUrl>
 }

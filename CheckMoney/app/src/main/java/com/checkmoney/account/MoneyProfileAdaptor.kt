@@ -30,7 +30,7 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
         val view: View?
         return when (viewType){
             MoneyProfileData.PRICE_TYPE -> {
-                view = LayoutInflater.from(context).inflate(R.layout.price_recycler, parent, false)
+                view = LayoutInflater.from(context).inflate(R.layout.recycler_price, parent, false)
                 PriceViewHolder(view)
             }
             MoneyProfileData.DATE_TYPE -> {
@@ -284,7 +284,7 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
                 btn_delete.setOnClickListener {
                     val deletedlg = Dialog(context)
                     deletedlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
-                    deletedlg.setContentView(R.layout.wallet_delete_dialog)     //다이얼로그에 사용할 xml 파일을 불러옴
+                    deletedlg.setContentView(R.layout.dialog_wallet_delete)     //다이얼로그에 사용할 xml 파일을 불러옴
                     deletedlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                     deletedlg.show()
 

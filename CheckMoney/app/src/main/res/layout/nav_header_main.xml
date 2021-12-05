@@ -37,14 +37,11 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1" />
 
-                <TextView
-                    android:id="@+id/text_name"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/spoqahansansneo_medium"
-                    android:text="name"
-                    android:textColor="@color/white"
-                    android:textSize="20sp" />
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/img_profile"
+                    android:layout_margin="10dp"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp" />
             </LinearLayout>
 
             <LinearLayout
@@ -65,13 +62,15 @@
                     android:textSize="12sp" />
 
                 <TextView
-                    android:id="@+id/text_logout"
+                    android:id="@+id/text_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
                     android:fontFamily="@font/spoqahansansneo_medium"
-                    android:text="LOGOUT"
+                    android:text="name"
                     android:textColor="@color/white"
-                    android:textSize="18sp" />
+                    android:textSize="20sp" />
+
             </LinearLayout>
         </LinearLayout>
 
@@ -81,7 +80,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:listitem="@layout/wallet_recycler" />
+            tools:listitem="@layout/recycler_wallet" />
 
         <View
             android:layout_width="match_parent"

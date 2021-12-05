@@ -20,7 +20,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class ProfileAdapter(private val context: Context, private val access_token: String, private val refresh_token: String, private val user_email: String, private val accountid: Int,private  val layout: DrawerLayout) : RecyclerView.Adapter<ProfileAdapter.ViewHolder>() {
+class ProfileAdapter(private val context: Context, private val access_token: String, private val refresh_token: String, private val accountId: Int,private  val layout: DrawerLayout) : RecyclerView.Adapter<ProfileAdapter.ViewHolder>() {
 
     val TAG = "ProfileAdapter"
     val TAG2 = "ProfileAdapter_API"
@@ -28,7 +28,7 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
     var datas = mutableListOf<ProfileData>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(context).inflate(R.layout.wallet_recycler,parent,false)
+        val view = LayoutInflater.from(context).inflate(R.layout.recycler_wallet,parent,false)
         return ViewHolder(view)
     }
 
@@ -58,7 +58,6 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
                     putExtra("data",item)
                     putExtra("access_token",access_token)
                     putExtra("refresh_token",refresh_token)
-                    putExtra("userId",user_email)
                     putExtra("accountId",item.id)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }.run { context.startActivity(this) }
@@ -71,7 +70,6 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
                     putExtra("data",item)
                     putExtra("access_token",access_token)
                     putExtra("refresh_token",refresh_token)
-                    putExtra("userId",user_email)
                     putExtra("accountId",item.id)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }.run { context.startActivity(this) }
@@ -80,7 +78,7 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
             text_edit.setOnClickListener {
                 val dlg = Dialog(context)
                 dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
-                dlg.setContentView(R.layout.wallet_edit_dialog)     //다이얼로그에 사용할 xml 파일을 불러옴
+                dlg.setContentView(R.layout.dialog_wallet_edit)     //다이얼로그에 사용할 xml 파일을 불러옴
                 dlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                 dlg.show()
 
@@ -107,7 +105,7 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
             text_delete.setOnClickListener {
                 val dlg = Dialog(context)
                 dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
-                dlg.setContentView(R.layout.wallet_delete_dialog)     //다이얼로그에 사용할 xml 파일을 불러옴
+                dlg.setContentView(R.layout.dialog_wallet_delete)     //다이얼로그에 사용할 xml 파일을 불러옴
                 dlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                 dlg.show()
 
@@ -119,12 +117,11 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
                     notifyDataSetChanged()
                     deleteAccount(item)
                     dlg.dismiss()
-                    if(accountid == item.id){
+                    if(accountId == item.id){
                         Intent(context, MainActivity::class.java).apply {
                             MoneyProfileDataList.datas.clear()
                             putExtra("access_token",access_token)
                             putExtra("refresh_token",refresh_token)
-                            putExtra("userId",user_email)
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }.run { context.startActivity(this) }
                     }

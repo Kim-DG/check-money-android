@@ -1,11 +1,16 @@
 package com.checkmoney.Login
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.CountDownTimer
+import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -14,8 +19,10 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.checkmoney.*
+import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import retrofit2.Call
@@ -41,7 +48,7 @@ class JoinPopupActivity(context : Context): Dialog(context) {
     private lateinit var text_timer: TextView
     private lateinit var text_pwRegular: TextView
     private lateinit var text_pwConfirmCheck: TextView
-    private lateinit var text_textJoinCheck: TextView
+    private lateinit var text_JoinCheck: TextView
 
     private var userPassword = ""
     private var userEmail = ""
@@ -60,8 +67,11 @@ class JoinPopupActivity(context : Context): Dialog(context) {
         dlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dlg.setCancelable(false)
 
+        // 변수초기화
         setVariable()
+        // 비밀번호 조건 체크
         pw_check()
+        // 이름 적었나 체크
         name_check()
 
         btn_auth.setOnClickListener{
@@ -104,38 +114,10 @@ class JoinPopupActivity(context : Context): Dialog(context) {
         text_timer = dlg.findViewById(R.id.text_timer)
         text_pwRegular = dlg.findViewById(R.id.text_pw_regular)
         text_pwConfirmCheck = dlg.findViewById(R.id.text_pw_confirm_result)
-        text_textJoinCheck = dlg.findViewById(R.id.text_join_check)
+        text_JoinCheck = dlg.findViewById(R.id.text_join_check)
     }
 
-    private fun userJoin() {
-        if(auth_count == 1 && pw_count == 1 && name_count == 1){
-            Log.d(TAG, "name : $userName")
-            val joinInfo = Join(userEmail,userPassword,userName)
-            postJoin(joinInfo)
-            dlg.dismiss()
-        }
-        else{
-            text_textJoinCheck.text="다시 한번 확인하여 주십시오."
-        }
-    }
-
-    private fun name_check(){
-        et_name.addTextChangedListener(object:TextWatcher{
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if(et_name.text.toString() != ""){
-                    name_count = 1
-                    userName = et_name.text.toString()
-                }
-                else{
-                    name_count = 0
-                }
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
-    }
-
+    // 비밀번호 조건 체크
     private fun pw_check() {
         et_pw.addTextChangedListener(object:TextWatcher {
             var pw_first = et_pw.text.toString()
@@ -219,6 +201,38 @@ class JoinPopupActivity(context : Context): Dialog(context) {
         })
     }
 
+    // 이름 적었나 체크
+    private fun name_check(){
+        et_name.addTextChangedListener(object:TextWatcher{
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if(et_name.text.toString() != ""){
+                    name_count = 1
+                    userName = et_name.text.toString()
+                }
+                else{
+                    name_count = 0
+                }
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+    }
+
+    // 회원가입시 모두 입력했나 확인
+    private fun userJoin() {
+        if(auth_count == 1 && pw_count == 1 && name_count == 1){
+            Log.d(TAG, "name : $userName")
+            val joinInfo = Join(userEmail,userPassword,userName)
+            postJoin(joinInfo)
+            dlg.dismiss()
+        }
+        else{
+            text_JoinCheck.text="다시 한번 확인하여 주십시오."
+        }
+    }
+
+    // 인증시간
     private fun countDownTimer(){
         object:CountDownTimer(300000,1){
             @SuppressLint("SetTextI18n")
