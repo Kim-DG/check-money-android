@@ -138,8 +138,6 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
         googleBuildIn()
         // access token, refresh token, 사용자 이메일을 LoginActivity에서 받아옴
         initSetting()
-        // recycler항목 추가
-        initRecycler()
         // menu recyceler항목 추가
         menuRecycler()
         // 총액계산
@@ -421,7 +419,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
         val size = Point()
         display.getRealSize(size) // or getSize(size)
         val width = size.x * (0.8)
-        val height = size.y * (0.6)
+        val height = size.y * (0.67)
         nav_header.layoutParams.height = height.toInt()
         naviView.layoutParams.width= width.toInt()
     }
@@ -588,8 +586,6 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
         btn_edit = edit_user_dlg.findViewById(R.id.btn_edit)
         btn_cancle = edit_user_dlg.findViewById(R.id.btn_cancel)
         btn_getImage = edit_user_dlg.findViewById(R.id.btn_getImage)
-
-        text_userEmail.text = userEmail
     }
 
     // 내정보수정 dlg
@@ -917,7 +913,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
     //-----------------------------------------------------------------------
     //                            Rest Api function
     //-----------------------------------------------------------------------
-    // 계좌 받아오기
+    // 계좌 생성
     private fun postAccount(accessToken: String, account: Account) {
         RetrofitBuild.api.postAccount(accessToken, account).enqueue(object : Callback<ResultId> {
             @SuppressLint("NotifyDataSetChanged")
@@ -951,7 +947,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
                     val responseApi = response.body()
                     Log.d(TAG2,responseApi.toString())
                     responseApi!!.rows.forEach {
-                        var arr = it.date.split("-")
+                        val arr = it.date.split("-")
                         MoneyProfileDataList.datas.add(MoneyProfileData(is_consumption = it.is_consumption, price = it.price, date = DateType(it.id, MoneyProfileData.PRICE_TYPE,Date(year = arr[0], month = arr[1], day = arr[2])),detail = it.detail,category = it.category,account_id = it.account_id))
                         MoneyProfileDataList.datas.add(MoneyProfileData(is_consumption = it.is_consumption, price = 0, date = DateType(-1, MoneyProfileData.DATE_TYPE,Date(year = arr[0], month = arr[1], day = arr[2])),detail = "",category = 0,account_id = it.account_id))
                         calTotalPrice(it.is_consumption, it.price)
@@ -1016,7 +1012,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
                     userEmail = responseApi.email
                     userProfile = responseApi.img_url
                     // 네비뷰 헤더 정보(이메일, 이름) 초기화
-                    text_email.text = responseApi.email
+                    text_userEmail.text = userEmail
                     text_name.text = userName
                     et_name.setText(userName)
                     if(userProfile == null){

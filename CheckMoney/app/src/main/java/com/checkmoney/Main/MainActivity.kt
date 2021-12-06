@@ -145,6 +145,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         profileAdapter = ProfileAdapter(this,access_token,refresh_token,accountId,layout_drawer)
         rv_profile.adapter = profileAdapter
 
+        ProfileDataList.datas.clear()
         // 받아온 계좌 추가
         ProfileDataList.datas.apply {
             accountList.forEach {
@@ -178,7 +179,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // drawer 가로넓이
         val width = size.x * (0.8)
         // drawer 헤드길이
-        val height = size.y * (0.6)
+        val height = size.y * (0.67)
         // 길이 적용
         nav_header.layoutParams.height = height.toInt()
         naviView.layoutParams.width= width.toInt()
@@ -355,8 +356,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         btn_edit = edit_user_dlg.findViewById(R.id.btn_edit)
         btn_cancle = edit_user_dlg.findViewById(R.id.btn_cancel)
         btn_getImage = edit_user_dlg.findViewById(R.id.btn_getImage)
-
-        text_userEmail.text = userEmail
     }
 
     // 내정보수정 dlg
@@ -759,7 +758,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     userEmail = responseApi.email
                     userProfile = responseApi.img_url
                     // 네비뷰 헤더 정보(이메일, 이름) 초기화
-                    text_email.text = responseApi.email
+                    text_userEmail.text = userEmail
                     text_name.text = userName
                     et_name.setText(userName)
                     if(userProfile == null){
