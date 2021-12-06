@@ -75,8 +75,8 @@ data class EditTransaction(
 data class EditMyInfo(
     var img_url: String?,
     var name: String,
-    var password: String,
-    var new_password: String
+    var password: String?,
+    var new_password: String?
 )
 //-----------------------------------------------------------------------
 //                              Response

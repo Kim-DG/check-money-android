@@ -30,6 +30,7 @@ import android.widget.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
+import androidx.core.widget.addTextChangedListener
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -72,6 +73,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private lateinit var edit_user_dlg: Dialog
     private lateinit var et_name: EditText
+    private lateinit var et_oldPw: EditText
     private lateinit var et_pw: EditText
     private lateinit var et_pwConfirm: EditText
     private lateinit var text_pwRegular: TextView
@@ -82,6 +84,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var btn_edit: Button
     private lateinit var btn_cancle: Button
     private lateinit var btn_getImage: TextView
+    private lateinit var body : MultipartBody.Part
 
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var access_token: String
@@ -90,13 +93,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var pieChart: PieChart
     private lateinit var choiceImage: Bitmap
 
+    private var editOldPassword = ""
     private var editUserPassword = ""
     private var editUserName = ""
     private var userName = ""
     private var userEmail = ""
     private var userProfile: String? = null
     private var name_count = 0
-    private var pw_count = 0
+    private var pw_count = 1
+    private var profile_count = 0
 
     private var refreshToken = RefreshToken(refresh_token = "")
     private val TAG = "MainActivity"
@@ -256,253 +261,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         pieChart.invalidate()
     }
 
-    private fun setEditUserInfoDlg(){
-        edit_user_dlg = Dialog(this@MainActivity)
-        edit_user_dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
-        edit_user_dlg.setContentView(R.layout.dialog_userinfo_edit)     //다이얼로그에 사용할 xml 파일을 불러옴
-        edit_user_dlg.window!!.setLayout(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.WRAP_CONTENT)
-        edit_user_dlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        et_name = edit_user_dlg.findViewById(R.id.et_name)
-        et_pw = edit_user_dlg.findViewById(R.id.et_password)
-        et_pwConfirm = edit_user_dlg.findViewById(R.id.et_password_check)
-        text_pwRegular = edit_user_dlg.findViewById(R.id.text_pw_regular)
-        text_pwConfirmCheck = edit_user_dlg.findViewById(R.id.text_pw_confirm_result)
-        text_EditCheck = edit_user_dlg.findViewById(R.id.text_edit_check)
-
-        text_userEmail = edit_user_dlg.findViewById(R.id.text_userEmail)
-        img_profile_dlg = edit_user_dlg.findViewById(R.id.img_profile)
-        btn_edit = edit_user_dlg.findViewById(R.id.btn_edit)
-        btn_cancle = edit_user_dlg.findViewById(R.id.btn_cancel)
-        btn_getImage = edit_user_dlg.findViewById(R.id.btn_getImage)
-
-        text_userEmail.text = userEmail
-    }
-
-    private fun editUserInfo() {
-        edit_user_dlg.show()
-        et_name.setText(userName)
-
-        getMyInfo(bearerAccessToken)
-        if(userProfile == null) {
-            img_profile_dlg.setImageResource(R.drawable.profile)
-        }
-        else{
-            val url =
-                "http://ec2-3-38-105-161.ap-northeast-2.compute.amazonaws.com:3001/api$userProfile"
-            Glide.with(this@MainActivity).load(url).into(img_profile_dlg)
-        }
-
-        pwCheck()
-        nameCheck()
-
-        btn_edit.setOnClickListener {
-            userEdit(edit_user_dlg)
-        }
-
-        btn_cancle.setOnClickListener {
-            edit_user_dlg.dismiss()
-        }
-        btn_getImage.setOnClickListener {
-            try {
-                if(galleryPermissionGranted(edit_user_dlg)) {
-                    openGallery()
-                }
-            } catch (e: ActivityNotFoundException) {
-                Log.e(TAG, e.message.toString())
-            }
-        }
-    }
-
-    // 갤러리 오픈
-    private fun openGallery(){
-        val intent = Intent(Intent.ACTION_GET_CONTENT)
-        intent.type = "image/*"
-        startActivityForResult(intent, REQUEST_OPEN_GALLERY)
-    }
-
-    // 비밀번호 조건 체크
-    private fun pwCheck() {
-        et_pw.addTextChangedListener(object: TextWatcher {
-            var pw_first = et_pw.text.toString()
-            var pw_check = et_pwConfirm.text.toString()
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                pw_first = et_pw.text.toString()
-                pw_check = et_pwConfirm.text.toString()
-                if(pw_first != ""){
-                    val regex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$@$!%*#?&])[A-Za-z\\d$@$!%*#?&]{8,}$".toRegex()
-                    if (!regex.containsMatchIn(pw_first)){
-                        text_pwRegular.text = "영문+숫자+특수문자를 포함하여 8자리 이상을 입력해 주세요."
-                    }
-                    else{
-                        text_pwRegular.text = ""
-                    }
-                }
-                else{
-                    text_pwRegular.text = ""
-                }
-                if(pw_check != "") {
-                    if (pw_first == pw_check) {
-                        text_pwConfirmCheck.setTextColor(
-                            ContextCompat.getColor(
-                                this@MainActivity,
-                                R.color.logoBlue
-                            )
-                        )
-                        text_pwConfirmCheck.text = "비밀번호가 일치합니다."
-                        pw_count = 1
-                        editUserPassword = pw_first
-                    } else {
-                        text_pwConfirmCheck.setTextColor(ContextCompat.getColor(this@MainActivity,
-                            R.color.red
-                        ))
-                        text_pwConfirmCheck.text = "비밀번호가 일치하지 않습니다."
-                        pw_count = 0
-                    }
-                }
-                else {
-                    text_pwConfirmCheck.text = ""
-                    pw_count = 0
-                }
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
-
-        et_pwConfirm.addTextChangedListener(object: TextWatcher {
-            var pw_first = et_pw.text.toString()
-            var pw_check = et_pwConfirm.text.toString()
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                pw_first = et_pw.text.toString()
-                pw_check = et_pwConfirm.text.toString()
-                if(pw_check != "") {
-                    if (pw_first == pw_check) {
-                        text_pwConfirmCheck.setTextColor(
-                            ContextCompat.getColor(
-                                this@MainActivity,
-                                R.color.logoBlue
-                            )
-                        )
-                        text_pwConfirmCheck.text = "비밀번호가 일치합니다."
-                        pw_count = 1
-                        editUserPassword = pw_first
-                    } else {
-                        text_pwConfirmCheck.setTextColor(ContextCompat.getColor(this@MainActivity,
-                            R.color.red
-                        ))
-                        text_pwConfirmCheck.text = "비밀번호가 일치하지 않습니다."
-                        pw_count = 0
-                    }
-                }
-                else {
-                    text_pwConfirmCheck.text = ""
-                    pw_count = 0
-                }
-
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
-    }
-
-    // 이름 적었나 체크
-    private fun nameCheck(){
-        et_name.addTextChangedListener(object:TextWatcher{
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if(et_name.text.toString() != ""){
-                    name_count = 1
-                    editUserName = et_name.text.toString()
-                }
-                else{
-                    name_count = 0
-                }
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
-    }
-
-    // 회원가입시 모두 입력했나 확인
-    private fun userEdit(dlg: Dialog) {
-        if(pw_count == 1 && name_count == 1){
-            //val joinInfo = Join(userPassword,userName)
-            //postJoin(joinInfo)
-            dlg.dismiss()
-        }
-        else{
-            text_EditCheck.text="다시 한번 확인하여 주십시오."
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if(requestCode == REQUEST_OPEN_GALLERY) {
-            if(resultCode == RESULT_OK) {
-                val currentImageUri = data?.data
-
-                try{
-                    currentImageUri?.let {
-                        choiceImage = MediaStore.Images.Media.getBitmap(
-                            this.contentResolver,
-                            currentImageUri
-                        )
-                    }
-                    val absolutePath = getFullPathFromUri(this,currentImageUri)
-                    val file = File(absolutePath!!)
-                    val requestFile = RequestBody.create(MediaType.parse("MultipartBody.Part"), file)
-                    val body : MultipartBody.Part = MultipartBody.Part.createFormData("img", file.path,requestFile)
-                    img_profile_dlg.setImageBitmap(choiceImage)
-                    img_profile.setImageBitmap(choiceImage)
-
-                    postImage(bearerAccessToken, body)
-                }catch(e: Exception) {
-                    //e.printStackTrace()
-                }
-            }
-        }
-    }
-
-    fun getFullPathFromUri(ctx: Context, fileUri: Uri?): String? {
-        var fullPath: String? = null
-        val column = "_data"
-        var cursor = ctx.contentResolver.query(fileUri!!, null, null, null, null)
-        if (cursor != null) {
-            cursor.moveToFirst()
-            var document_id = cursor.getString(0)
-            if (document_id == null) {
-                for (i in 0 until cursor.columnCount) {
-                    if (column.equals(cursor.getColumnName(i), ignoreCase = true)) {
-                        fullPath = cursor.getString(i)
-                        break
-                    }
-                }
-            } else {
-                document_id = document_id.substring(document_id.lastIndexOf(":") + 1)
-                cursor.close()
-                val projection = arrayOf(column)
-                try {
-                    cursor = ctx.contentResolver.query(
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        projection,
-                        MediaStore.Images.Media._ID + " = ? ",
-                        arrayOf(document_id),
-                        null
-                    )
-                    if (cursor != null) {
-                        cursor.moveToFirst()
-                        fullPath = cursor.getString(cursor.getColumnIndexOrThrow(column))
-                    }
-                } finally {
-                    cursor.close()
-                }
-            }
-        }
-        return fullPath
-    }
-
     // 네비게이션 메뉴 아이템 클릭 시 수행
     @SuppressLint("NotifyDataSetChanged")
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
@@ -571,9 +329,336 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     //-----------------------------------------------------------------------
+    //                             Edit My Info
+    //-----------------------------------------------------------------------
+
+    // 내정보수정 세팅
+    private fun setEditUserInfoDlg(){
+        edit_user_dlg = Dialog(this@MainActivity)
+        edit_user_dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
+        edit_user_dlg.setContentView(R.layout.dialog_userinfo_edit)     //다이얼로그에 사용할 xml 파일을 불러옴
+        edit_user_dlg.window!!.setLayout(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.WRAP_CONTENT)
+        edit_user_dlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        et_name = edit_user_dlg.findViewById(R.id.et_name)
+        et_oldPw = edit_user_dlg.findViewById(R.id.et_oldPassword)
+        et_pw = edit_user_dlg.findViewById(R.id.et_password)
+        et_pwConfirm = edit_user_dlg.findViewById(R.id.et_password_check)
+        text_pwRegular = edit_user_dlg.findViewById(R.id.text_pw_regular)
+        text_pwConfirmCheck = edit_user_dlg.findViewById(R.id.text_pw_confirm_result)
+        text_EditCheck = edit_user_dlg.findViewById(R.id.text_edit_check)
+
+        text_userEmail = edit_user_dlg.findViewById(R.id.text_userEmail)
+        img_profile_dlg = edit_user_dlg.findViewById(R.id.img_profile)
+        btn_edit = edit_user_dlg.findViewById(R.id.btn_edit)
+        btn_cancle = edit_user_dlg.findViewById(R.id.btn_cancel)
+        btn_getImage = edit_user_dlg.findViewById(R.id.btn_getImage)
+
+        text_userEmail.text = userEmail
+    }
+
+    // 내정보수정 dlg
+    private fun editUserInfo() {
+        edit_user_dlg.show()
+        profile_count = 0
+        getMyInfo(bearerAccessToken)
+        if(userProfile == null) {
+            img_profile_dlg.setImageResource(R.drawable.profile)
+        }
+        else{
+            val url =
+                "http://ec2-3-38-105-161.ap-northeast-2.compute.amazonaws.com:3001/api$userProfile"
+            Glide.with(this@MainActivity).load(url).into(img_profile_dlg)
+        }
+
+        pwCheck()
+        nameCheck()
+
+        btn_edit.setOnClickListener {
+            userEdit()
+        }
+
+        btn_cancle.setOnClickListener {
+            text_EditCheck.text = ""
+            edit_user_dlg.dismiss()
+        }
+        btn_getImage.setOnClickListener {
+            val dlg = Dialog(this@MainActivity)
+            dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
+            dlg.setContentView(R.layout.dialog_choice_profile)     //다이얼로그에 사용할 xml 파일을 불러옴
+            dlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            dlg.show()
+
+            val btn_basic: Button = dlg.findViewById(R.id.btn_basic)
+            val btn_gallery: Button = dlg.findViewById(R.id.btn_gallery)
+            val btn_cancle: Button = dlg.findViewById(R.id.btn_cancel)
+
+            btn_basic.setOnClickListener {
+                img_profile.setImageResource(R.drawable.profile)
+                img_profile_dlg.setImageResource(R.drawable.profile)
+                userProfile = null
+                dlg.dismiss()
+            }
+
+            btn_gallery.setOnClickListener {
+                try {
+                    if(galleryPermissionGranted(edit_user_dlg)) {
+                        openGallery()
+                    }
+                } catch (e: ActivityNotFoundException) {
+                    Log.e(TAG, e.message.toString())
+                }
+                dlg.dismiss()
+            }
+
+            btn_cancle.setOnClickListener {
+                dlg.dismiss()
+            }
+        }
+    }
+
+    // 갤러리 오픈
+    private fun openGallery(){
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "image/*"
+        startActivityForResult(intent, REQUEST_OPEN_GALLERY)
+    }
+
+    // 비밀번호 조건 체크
+    private fun pwCheck() {
+        var regular_count = 0
+        et_oldPw.addTextChangedListener(object: TextWatcher{
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                editOldPassword = et_oldPw.text.toString()
+                if(editOldPassword == "" && editUserPassword == ""){
+                    pw_count = 1
+                }else if(editOldPassword != "" && editUserPassword == ""){
+                    pw_count = 0
+                }
+            }
+        })
+        et_pw.addTextChangedListener(object: TextWatcher {
+            var pw_first = et_pw.text.toString()
+            var pw_check = et_pwConfirm.text.toString()
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                pw_first = et_pw.text.toString()
+                pw_check = et_pwConfirm.text.toString()
+                editUserPassword = pw_first
+                if(pw_first != ""){
+                    val regex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$@$!%*#?&])[A-Za-z\\d$@$!%*#?&]{8,}$".toRegex()
+                    if (!regex.containsMatchIn(pw_first)){
+                        text_pwRegular.text = "영문+숫자+특수문자를 포함하여 8자리 이상을 입력해 주세요."
+                        regular_count = 0
+                    }
+                    else{
+                        text_pwRegular.text = ""
+                        regular_count = 1
+                    }
+                }
+                else{
+                    text_pwRegular.text = ""
+                }
+                if(pw_check != "") {
+                    if (pw_first == pw_check) {
+                        text_pwConfirmCheck.setTextColor(
+                            ContextCompat.getColor(
+                                this@MainActivity,
+                                R.color.logoBlue
+                            )
+                        )
+                        text_pwConfirmCheck.text = "비밀번호가 일치합니다."
+                        pw_count = if(regular_count == 1) {
+                            1
+                        }else 0
+                    } else {
+                        text_pwConfirmCheck.setTextColor(ContextCompat.getColor(this@MainActivity,
+                            R.color.red
+                        ))
+                        text_pwConfirmCheck.text = "비밀번호가 일치하지 않습니다."
+                        pw_count = 0
+                    }
+                }
+                else {
+                    text_pwConfirmCheck.text = ""
+                    pw_count = if(regular_count == 1) {
+                        1
+                    }else 0
+                }
+            }
+            override fun afterTextChanged(s: Editable?) {
+                if(editOldPassword == "" && editUserPassword == ""){
+                    pw_count = 1
+                }
+            }
+        })
+
+        et_pwConfirm.addTextChangedListener(object: TextWatcher {
+            var pw_first = et_pw.text.toString()
+            var pw_check = et_pwConfirm.text.toString()
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                pw_first = et_pw.text.toString()
+                pw_check = et_pwConfirm.text.toString()
+                if(pw_check != "") {
+                    if (pw_first == pw_check) {
+                        text_pwConfirmCheck.setTextColor(
+                            ContextCompat.getColor(
+                                this@MainActivity,
+                                R.color.logoBlue
+                            )
+                        )
+                        text_pwConfirmCheck.text = "비밀번호가 일치합니다."
+                        pw_count = if(regular_count == 1) {
+                            1
+                        }else 0
+                    } else {
+                        text_pwConfirmCheck.setTextColor(ContextCompat.getColor(this@MainActivity,
+                            R.color.red
+                        ))
+                        text_pwConfirmCheck.text = "비밀번호가 일치하지 않습니다."
+                        pw_count = 0
+                    }
+                }
+                else {
+                    text_pwConfirmCheck.text = ""
+                    pw_count = 0
+                }
+
+            }
+            override fun afterTextChanged(s: Editable?) {
+                if(editOldPassword == "" && editUserPassword == ""){
+                    pw_count = 1
+                }
+            }
+        })
+    }
+
+    // 이름 적었나 체크
+    private fun nameCheck(){
+        et_name.addTextChangedListener(object:TextWatcher{
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            }
+            override fun afterTextChanged(s: Editable?) {
+                if(et_name.text.toString() != ""){
+                    name_count = 1
+                    editUserName = et_name.text.toString()
+                }
+                else{
+                    name_count = 0
+                }
+            }
+        })
+    }
+
+    // 수정 완료
+    private fun userEdit() {
+        if(pw_count == 1 && name_count == 1){
+            if(profile_count == 1) {
+                postImage(bearerAccessToken, body)
+                img_profile.setImageBitmap(choiceImage)
+            }
+            else {
+                if (editUserPassword == "") {
+                    val myInfo = EditMyInfo(null, editUserName, null, null)
+                    text_name.text = editUserName
+                    putMyInfo(bearerAccessToken, myInfo)
+                } else {
+                    val myInfo =
+                        EditMyInfo(null, editUserName, editOldPassword, editUserPassword)
+                    text_name.text = editUserName
+                    putMyInfo(bearerAccessToken, myInfo)
+                }
+            }
+        }
+        else{
+            text_EditCheck.text="다시 한번 확인하여 주십시오."
+        }
+    }
+
+    // 갤러리 오픈
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(requestCode == REQUEST_OPEN_GALLERY) {
+            if(resultCode == RESULT_OK) {
+                val currentImageUri = data?.data
+
+                try{
+                    currentImageUri?.let {
+                        choiceImage = MediaStore.Images.Media.getBitmap(
+                            this.contentResolver,
+                            currentImageUri
+                        )
+                    }
+                    val absolutePath = getFullPathFromUri(this,currentImageUri)
+                    val file = File(absolutePath!!)
+                    val requestFile = RequestBody.create(MediaType.parse("MultipartBody.Part"), file)
+                    body = MultipartBody.Part.createFormData("img", file.path,requestFile)
+                    profile_count = 1
+                    img_profile_dlg.setImageBitmap(choiceImage)
+                }catch(e: Exception) {
+                    //e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    // 절대경로 구하기
+    private fun getFullPathFromUri(ctx: Context, fileUri: Uri?): String? {
+        var fullPath: String? = null
+        val column = "_data"
+        var cursor = ctx.contentResolver.query(fileUri!!, null, null, null, null)
+        if (cursor != null) {
+            cursor.moveToFirst()
+            var document_id = cursor.getString(0)
+            if (document_id == null) {
+                for (i in 0 until cursor.columnCount) {
+                    if (column.equals(cursor.getColumnName(i), ignoreCase = true)) {
+                        fullPath = cursor.getString(i)
+                        break
+                    }
+                }
+            } else {
+                document_id = document_id.substring(document_id.lastIndexOf(":") + 1)
+                cursor.close()
+                val projection = arrayOf(column)
+                try {
+                    cursor = ctx.contentResolver.query(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        projection,
+                        MediaStore.Images.Media._ID + " = ? ",
+                        arrayOf(document_id),
+                        null
+                    )
+                    if (cursor != null) {
+                        cursor.moveToFirst()
+                        fullPath = cursor.getString(cursor.getColumnIndexOrThrow(column))
+                    }
+                } finally {
+                    cursor.close()
+                }
+            }
+        }
+        return fullPath
+    }
+
+    //-----------------------------------------------------------------------
     //                             Google Login
     //-----------------------------------------------------------------------
-    //구글 세팅
+    // 구글 세팅
     private fun googleBuildIn() {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken("500159069581-m2dqev5jhbpumksnoodl7bmi90v5kjtl.apps.googleusercontent.com")
@@ -676,6 +761,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     // 네비뷰 헤더 정보(이메일, 이름) 초기화
                     text_email.text = responseApi.email
                     text_name.text = userName
+                    et_name.setText(userName)
                     if(userProfile == null){
                         img_profile.setImageResource(R.drawable.profile)
                     }
@@ -704,6 +790,39 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         })
     }
 
+    private fun putMyInfo(accessToken: String, editMyInfo: EditMyInfo){
+        RetrofitBuild.api.putMyInfo(accessToken,editMyInfo).enqueue(object : Callback<Result> {
+            override fun onResponse(call: Call<Result>, response: Response<Result>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+                    edit_user_dlg.dismiss()
+                } else { // code == 400
+                    val errorResponse: ErrorResult? = gson.fromJson(response.errorBody()!!.charStream(), type)
+                    Log.d(TAG2, "연결실패")
+                    when(errorResponse!!.code){
+                        40007 -> {
+                            postRefresh(refreshToken)
+                            putMyInfo(bearerAccessToken, editMyInfo)
+                        }
+                        40008 -> text_EditCheck.text = "이전 비밀번호가 일치하지 않습니다."
+                        // access토큰 만료
+                        40300 -> {
+                            postRefresh(refreshToken)
+                            putMyInfo(bearerAccessToken, editMyInfo)
+                        }
+                    }
+                }
+            }
+            override fun onFailure(call: Call<Result>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
     private fun postImage(accessToken: String, body: MultipartBody.Part){
         RetrofitBuild.api.postImage(accessToken,body).enqueue(object : Callback<ResultImageUrl> {
             override fun onResponse(call: Call<ResultImageUrl>, response: Response<ResultImageUrl>) {
@@ -711,6 +830,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     Log.d(TAG2, "연결성공")
                     val responseApi = response.body()
                     Log.d(TAG2,responseApi.toString())
+                    userProfile = responseApi?.url
+                    if (editUserPassword == "") {
+                        val myInfo = EditMyInfo(userProfile, editUserName, null, null)
+                        text_name.text = editUserName
+                        putMyInfo(bearerAccessToken, myInfo)
+                    } else {
+                        val myInfo =
+                            EditMyInfo(userProfile, editUserName, editOldPassword, editUserPassword)
+                        text_name.text = editUserName
+                        putMyInfo(bearerAccessToken, myInfo)
+                    }
                 } else { // code == 400
                     val errorResponse: ErrorResult? = gson.fromJson(response.errorBody()!!.charStream(), type)
                     Log.d(TAG2, "연결실패")
@@ -759,8 +889,24 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     //-------------------------------------------------------------------------------------
-    //                                         권한
+    //                                      Permission
     //-------------------------------------------------------------------------------------
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == REQ_PERMISSION_GALLERY){
+            if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                openGallery()
+            } else{
+                Toast.makeText(this,"권한이 없어 해당 기능을 실행할 수 없습니다.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     private fun galleryPermissionGranted(dlg: Dialog): Boolean {
         val preference = getPreferences(Context.MODE_PRIVATE)

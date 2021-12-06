@@ -129,7 +129,18 @@
                 android:textColorHint="#D3D3D3" />
         </LinearLayout>
 
-
+        <EditText
+            android:id="@+id/et_oldPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:fontFamily="@font/spoqahansansneo_medium"
+            android:hint="Old Password"
+            android:inputType="textPassword"
+            android:padding="20dp"
+            android:textAlignment="textStart"
+            android:textColor="@color/black"
+            android:textColorHint="#D3D3D3" />
         <EditText
             android:id="@+id/et_password"
             android:layout_width="match_parent"

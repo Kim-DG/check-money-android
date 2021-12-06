@@ -8,6 +8,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:padding="20dp"
         android:background="@drawable/dialog_shape"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
@@ -87,6 +88,7 @@
                 android:layout_width="100dp"
                 android:layout_height="match_parent"
                 android:layout_margin="10dp"
+                android:background="@color/white"
                 tools:ignore="SpeakableTextPresentCheck" />
         </LinearLayout>
 
@@ -119,7 +121,7 @@
                 android:layout_width="100dp"
                 android:layout_height="match_parent"
                 android:layout_margin="10dp"
-                android:gravity="start"
+                android:background="@color/white"
                 tools:ignore="SpeakableTextPresentCheck" />
         </LinearLayout>
 
@@ -139,7 +141,7 @@
                 android:fontFamily="@font/spoqahansansneo_medium"
                 android:text=""
                 android:textColor="@color/red"
-                android:textSize="15sp"
+                android:textSize="12sp"
                 app:layout_constraintEnd_toEndOf="@+id/linearLayout4"
                 app:layout_constraintStart_toStartOf="@+id/linearLayout4"
                 app:layout_constraintTop_toBottomOf="@+id/linearLayout4" />

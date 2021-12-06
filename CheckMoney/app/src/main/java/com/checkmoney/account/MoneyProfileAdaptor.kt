@@ -24,7 +24,6 @@ import java.util.*
 class MoneyProfileAdapter(private val context: Context, private val calTotal: CalTotal, private val accountId: Int, private val accessToken: String) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     var datas = mutableListOf<MoneyProfileData>()
-    val TAG = "MoneyProfileAdapter"
     val TAG2 = "MoneyProfileAdapter_API"
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view: View?
@@ -357,6 +356,10 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
         }
     }
 
+    //-----------------------------------------------------------------------
+    //                            Rest Api function
+    //-----------------------------------------------------------------------
+    // 내역 수정
     private fun putTransaction(accessToken: String, item: MoneyProfileData, transaction: EditTransaction) {
         RetrofitBuild.api.putTransaction(accessToken, item.date.id, transaction).enqueue(object :
             Callback<Result> {
@@ -378,6 +381,7 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
         })
     }
 
+    // 내역 삭제
     private fun deleteTransaction(accessToken: String, item: MoneyProfileData) {
         RetrofitBuild.api.deleteTransaction(accessToken, item.date.id).enqueue(object : Callback<Result> {
             @SuppressLint("NotifyDataSetChanged")

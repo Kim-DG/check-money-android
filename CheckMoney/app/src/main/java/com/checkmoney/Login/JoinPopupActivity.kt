@@ -130,6 +130,7 @@ class JoinPopupActivity(context : Context): Dialog(context) {
                     val regex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$@$!%*#?&])[A-Za-z\\d$@$!%*#?&]{8,}$".toRegex()
                     if (!regex.containsMatchIn(pw_first)){
                         text_pwRegular.text = "영문+숫자+특수문자를 포함하여 8자리 이상을 입력해 주세요."
+                        pw_count = 0
                     }
                     else{
                         text_pwRegular.text = ""

@@ -1,37 +1,60 @@
 package com.checkmoney
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Point
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
+import android.provider.Settings
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.view.Window
+import android.view.WindowManager
 import android.widget.*
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.checkmoney.account.CalTotal
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.snackbar.Snackbar
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import de.hdodenhof.circleimageview.CircleImageView
+import okhttp3.MediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.File
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
 class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigationItemSelectedListener {
     private val money_datas_list = MoneyProfileDataList
+    private val gson = Gson()
+    private val type = object : TypeToken<ErrorResult>() {}.type
 
     private lateinit var walletDatas: ProfileData
     private lateinit var money_profileAdapter: MoneyProfileAdapter
@@ -55,17 +78,36 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
     private lateinit var text_name: TextView
     private lateinit var naviView: NavigationView
 
+    private lateinit var edit_user_dlg: Dialog
+    private lateinit var et_name: EditText
+    private lateinit var et_oldPw: EditText
+    private lateinit var et_pw: EditText
+    private lateinit var et_pwConfirm: EditText
+    private lateinit var text_pwRegular: TextView
+    private lateinit var text_pwConfirmCheck: TextView
+    private lateinit var text_EditCheck: TextView
+    private lateinit var text_userEmail: TextView
+    private lateinit var img_profile_dlg: CircleImageView
+    private lateinit var btn_edit: Button
+    private lateinit var btn_cancle: Button
+    private lateinit var btn_getImage: TextView
+    private lateinit var choiceImage: Bitmap
+    private lateinit var body : MultipartBody.Part
+
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var access_token: String
     private lateinit var refresh_token: String
     private lateinit var bearerAccessToken: String
 
+    private var editOldPassword = ""
     private var editUserPassword = ""
     private var editUserName = ""
     private var userName = ""
     private var userEmail = ""
+    private var userProfile: String? = null
     private var name_count = 0
-    private var pw_count = 0
+    private var pw_count = 1
+    private var profile_count = 0
 
     @SuppressLint("SimpleDateFormat")
     private val df = SimpleDateFormat("yyyy/MM")
@@ -76,8 +118,11 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
     @SuppressLint("SimpleDateFormat")
     private val qf = SimpleDateFormat("dd")
 
+    private var refreshToken = RefreshToken(refresh_token = "")
     private var totalPrice: Long = 0
     private var accountId = -1
+    private val REQUEST_OPEN_GALLERY: Int = 1
+    private val REQ_PERMISSION_GALLERY = 1001
     private val TAG = "WalletActivity"
     private val TAG2 = "WalletActivity_API"
 
@@ -99,8 +144,12 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
         menuRecycler()
         // 총액계산
         initTotalPrice()
-
+        // 내 정보 받아오기
+        getMyInfo(bearerAccessToken)
+        // 내역 받아오기
         getTransaction(bearerAccessToken)
+        // 내정보수정 dlg setting
+        setEditUserInfoDlg()
 
         // 전 월로 이동
         btn_left.setOnClickListener {
@@ -462,10 +511,11 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
                 mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 startActivity(mainIntent)
             }
+            // 내정보수정버튼 클릭 - 정보수정 dlg
             R.id.edit -> {
-
+                editUserInfo()
             }
-
+            // 로그아웃버튼 클릭 - 로그아웃
             R.id.logout -> {
                 ProfileDataList.datas.clear()
                 AppPref.prefs.clearUser(this)
@@ -512,9 +562,336 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
     }
 
     //-----------------------------------------------------------------------
-    //                             Google Login
+    //                             Edit My Info
     //-----------------------------------------------------------------------
 
+    // 내정보수정 세팅
+    private fun setEditUserInfoDlg(){
+        edit_user_dlg = Dialog(this@WalletActivity)
+        edit_user_dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
+        edit_user_dlg.setContentView(R.layout.dialog_userinfo_edit)     //다이얼로그에 사용할 xml 파일을 불러옴
+        edit_user_dlg.window!!.setLayout(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.WRAP_CONTENT)
+        edit_user_dlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        et_name = edit_user_dlg.findViewById(R.id.et_name)
+        et_oldPw = edit_user_dlg.findViewById(R.id.et_oldPassword)
+        et_pw = edit_user_dlg.findViewById(R.id.et_password)
+        et_pwConfirm = edit_user_dlg.findViewById(R.id.et_password_check)
+        text_pwRegular = edit_user_dlg.findViewById(R.id.text_pw_regular)
+        text_pwConfirmCheck = edit_user_dlg.findViewById(R.id.text_pw_confirm_result)
+        text_EditCheck = edit_user_dlg.findViewById(R.id.text_edit_check)
+
+        text_userEmail = edit_user_dlg.findViewById(R.id.text_userEmail)
+        img_profile_dlg = edit_user_dlg.findViewById(R.id.img_profile)
+        btn_edit = edit_user_dlg.findViewById(R.id.btn_edit)
+        btn_cancle = edit_user_dlg.findViewById(R.id.btn_cancel)
+        btn_getImage = edit_user_dlg.findViewById(R.id.btn_getImage)
+
+        text_userEmail.text = userEmail
+    }
+
+    // 내정보수정 dlg
+    private fun editUserInfo() {
+        edit_user_dlg.show()
+        profile_count = 0
+        getMyInfo(bearerAccessToken)
+        if(userProfile == null) {
+            img_profile_dlg.setImageResource(R.drawable.profile)
+        }
+        else{
+            val url =
+                "http://ec2-3-38-105-161.ap-northeast-2.compute.amazonaws.com:3001/api$userProfile"
+            Glide.with(this@WalletActivity).load(url).into(img_profile_dlg)
+        }
+
+        pwCheck()
+        nameCheck()
+
+        btn_edit.setOnClickListener {
+            userEdit()
+        }
+
+        btn_cancle.setOnClickListener {
+            edit_user_dlg.dismiss()
+        }
+        btn_getImage.setOnClickListener {
+            val dlg = Dialog(this@WalletActivity)
+            dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
+            dlg.setContentView(R.layout.dialog_choice_profile)     //다이얼로그에 사용할 xml 파일을 불러옴
+            dlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            dlg.show()
+
+            val btn_basic: Button = dlg.findViewById(R.id.btn_basic)
+            val btn_gallery: Button = dlg.findViewById(R.id.btn_gallery)
+            val btn_cancle: Button = dlg.findViewById(R.id.btn_cancel)
+
+            btn_basic.setOnClickListener {
+                img_profile.setImageResource(R.drawable.profile)
+                img_profile_dlg.setImageResource(R.drawable.profile)
+                userProfile = null
+                dlg.dismiss()
+            }
+
+            btn_gallery.setOnClickListener {
+                try {
+                    if(galleryPermissionGranted(edit_user_dlg)) {
+                        openGallery()
+                    }
+                } catch (e: ActivityNotFoundException) {
+                    Log.e(TAG, e.message.toString())
+                }
+                dlg.dismiss()
+            }
+
+            btn_cancle.setOnClickListener {
+                dlg.dismiss()
+            }
+        }
+    }
+
+    // 갤러리 오픈
+    private fun openGallery(){
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "image/*"
+        startActivityForResult(intent, REQUEST_OPEN_GALLERY)
+    }
+
+    // 비밀번호 조건 체크
+    private fun pwCheck() {
+        var regular_count = 0
+        et_oldPw.addTextChangedListener(object: TextWatcher{
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                editOldPassword = et_oldPw.text.toString()
+                if(editOldPassword == "" && editUserPassword == ""){
+                    pw_count = 1
+                }else if(editOldPassword != "" && editUserPassword == ""){
+                    pw_count = 0
+                }
+            }
+        })
+        et_pw.addTextChangedListener(object: TextWatcher {
+            var pw_first = et_pw.text.toString()
+            var pw_check = et_pwConfirm.text.toString()
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                pw_first = et_pw.text.toString()
+                pw_check = et_pwConfirm.text.toString()
+                editUserPassword = pw_first
+                if(pw_first != ""){
+                    val regex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$@$!%*#?&])[A-Za-z\\d$@$!%*#?&]{8,}$".toRegex()
+                    if (!regex.containsMatchIn(pw_first)){
+                        text_pwRegular.text = "영문+숫자+특수문자를 포함하여 8자리 이상을 입력해 주세요."
+                        regular_count = 0
+                    }
+                    else{
+                        text_pwRegular.text = ""
+                        regular_count = 1
+                    }
+                }
+                else{
+                    text_pwRegular.text = ""
+                }
+                if(pw_check != "") {
+                    if (pw_first == pw_check) {
+                        text_pwConfirmCheck.setTextColor(
+                            ContextCompat.getColor(
+                                this@WalletActivity,
+                                R.color.logoBlue
+                            )
+                        )
+                        text_pwConfirmCheck.text = "비밀번호가 일치합니다."
+                        pw_count = if(regular_count == 1) {
+                            1
+                        }else 0
+                    } else {
+                        text_pwConfirmCheck.setTextColor(ContextCompat.getColor(this@WalletActivity,
+                            R.color.red
+                        ))
+                        text_pwConfirmCheck.text = "비밀번호가 일치하지 않습니다."
+                        pw_count = 0
+                    }
+                }
+                else {
+                    text_pwConfirmCheck.text = ""
+                    pw_count = if(regular_count == 1) {
+                        1
+                    }else 0
+                }
+            }
+            override fun afterTextChanged(s: Editable?) {
+                if(editOldPassword == "" && editUserPassword == ""){
+                    pw_count = 1
+                }
+            }
+        })
+
+        et_pwConfirm.addTextChangedListener(object: TextWatcher {
+            var pw_first = et_pw.text.toString()
+            var pw_check = et_pwConfirm.text.toString()
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                pw_first = et_pw.text.toString()
+                pw_check = et_pwConfirm.text.toString()
+                if(pw_check != "") {
+                    if (pw_first == pw_check) {
+                        text_pwConfirmCheck.setTextColor(
+                            ContextCompat.getColor(
+                                this@WalletActivity,
+                                R.color.logoBlue
+                            )
+                        )
+                        text_pwConfirmCheck.text = "비밀번호가 일치합니다."
+                        pw_count = if(regular_count == 1) {
+                            1
+                        }else 0
+                    } else {
+                        text_pwConfirmCheck.setTextColor(ContextCompat.getColor(this@WalletActivity,
+                            R.color.red
+                        ))
+                        text_pwConfirmCheck.text = "비밀번호가 일치하지 않습니다."
+                        pw_count = 0
+                    }
+                }
+                else {
+                    text_pwConfirmCheck.text = ""
+                    pw_count = 0
+                }
+
+            }
+            override fun afterTextChanged(s: Editable?) {
+                if(editOldPassword == "" && editUserPassword == ""){
+                    pw_count = 1
+                }
+            }
+        })
+    }
+
+    // 이름 적었나 체크
+    private fun nameCheck(){
+        et_name.addTextChangedListener(object:TextWatcher{
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            }
+            override fun afterTextChanged(s: Editable?) {
+                if(et_name.text.toString() != ""){
+                    name_count = 1
+                    editUserName = et_name.text.toString()
+                }
+                else{
+                    name_count = 0
+                }
+            }
+        })
+    }
+
+    // 회원가입시 모두 입력했나 확인
+    private fun userEdit() {
+        if(pw_count == 1 && name_count == 1){
+            if(profile_count == 1) {
+                postImage(bearerAccessToken, body)
+                img_profile.setImageBitmap(choiceImage)
+            }
+            else {
+                if (editUserPassword == "") {
+                    val myInfo = EditMyInfo(null, editUserName, null, null)
+                    text_name.text = editUserName
+                    putMyInfo(bearerAccessToken, myInfo)
+                } else {
+                    val myInfo =
+                        EditMyInfo(null, editUserName, editOldPassword, editUserPassword)
+                    text_name.text = editUserName
+                    putMyInfo(bearerAccessToken, myInfo)
+                }
+            }
+        }
+        else{
+            Log.d("!!!!!!!!!!!!!",pw_count.toString() + name_count.toString())
+            text_EditCheck.text="다시 한번 확인하여 주십시오."
+        }
+    }
+
+    // 갤러리 오픈
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(requestCode == REQUEST_OPEN_GALLERY) {
+            if(resultCode == RESULT_OK) {
+                val currentImageUri = data?.data
+
+                try{
+                    currentImageUri?.let {
+                        choiceImage = MediaStore.Images.Media.getBitmap(
+                            this.contentResolver,
+                            currentImageUri
+                        )
+                    }
+                    val absolutePath = getFullPathFromUri(this,currentImageUri)
+                    val file = File(absolutePath!!)
+                    val requestFile = RequestBody.create(MediaType.parse("MultipartBody.Part"), file)
+                    body = MultipartBody.Part.createFormData("img", file.path,requestFile)
+                    profile_count = 1
+                    img_profile_dlg.setImageBitmap(choiceImage)
+                }catch(e: Exception) {
+                    //e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    // 절대경로 구하기
+    fun getFullPathFromUri(ctx: Context, fileUri: Uri?): String? {
+        var fullPath: String? = null
+        val column = "_data"
+        var cursor = ctx.contentResolver.query(fileUri!!, null, null, null, null)
+        if (cursor != null) {
+            cursor.moveToFirst()
+            var document_id = cursor.getString(0)
+            if (document_id == null) {
+                for (i in 0 until cursor.columnCount) {
+                    if (column.equals(cursor.getColumnName(i), ignoreCase = true)) {
+                        fullPath = cursor.getString(i)
+                        break
+                    }
+                }
+            } else {
+                document_id = document_id.substring(document_id.lastIndexOf(":") + 1)
+                cursor.close()
+                val projection = arrayOf(column)
+                try {
+                    cursor = ctx.contentResolver.query(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        projection,
+                        MediaStore.Images.Media._ID + " = ? ",
+                        arrayOf(document_id),
+                        null
+                    )
+                    if (cursor != null) {
+                        cursor.moveToFirst()
+                        fullPath = cursor.getString(cursor.getColumnIndexOrThrow(column))
+                    }
+                } finally {
+                    cursor.close()
+                }
+            }
+        }
+        return fullPath
+    }
+
+    //-----------------------------------------------------------------------
+    //                             Google Login
+    //-----------------------------------------------------------------------
+    // 구글 세팅
     private fun googleBuildIn() {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken("500159069581-m2dqev5jhbpumksnoodl7bmi90v5kjtl.apps.googleusercontent.com")
@@ -540,7 +917,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
     //-----------------------------------------------------------------------
     //                            Rest Api function
     //-----------------------------------------------------------------------
-
+    // 계좌 받아오기
     private fun postAccount(accessToken: String, account: Account) {
         RetrofitBuild.api.postAccount(accessToken, account).enqueue(object : Callback<ResultId> {
             @SuppressLint("NotifyDataSetChanged")
@@ -565,7 +942,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
             }
         })
     }
-
+    // 내역 받아오기
     private fun getTransaction(accessToken: String){
         RetrofitBuild.api.getTransaction(accessToken, accountId).enqueue(object : Callback<ResultTransactions> {
             override fun onResponse(call: Call<ResultTransactions>, response: Response<ResultTransactions>) {
@@ -595,6 +972,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
         })
     }
 
+    // 내역 추가
     private fun postTransaction(accessToken: String, transaction: Transaction,dateData: MoneyProfileData, priceData: MoneyProfileData) {
         RetrofitBuild.api.postTransaction(accessToken, transaction).enqueue(object : Callback<ResultId> {
             @SuppressLint("NotifyDataSetChanged")
@@ -624,5 +1002,217 @@ class WalletActivity : AppCompatActivity(), CalTotal,NavigationView.OnNavigation
                 Log.d(TAG2, t.toString())
             }
         })
+    }
+
+    private fun getMyInfo(accessToken: String){
+        RetrofitBuild.api.getMyInfo(accessToken).enqueue(object : Callback<ResultMyInfo> {
+            override fun onResponse(call: Call<ResultMyInfo>, response: Response<ResultMyInfo>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+
+                    userName = responseApi!!.name
+                    userEmail = responseApi.email
+                    userProfile = responseApi.img_url
+                    // 네비뷰 헤더 정보(이메일, 이름) 초기화
+                    text_email.text = responseApi.email
+                    text_name.text = userName
+                    et_name.setText(userName)
+                    if(userProfile == null){
+                        img_profile.setImageResource(R.drawable.profile)
+                    }
+                    else{
+                        val url = "http://ec2-3-38-105-161.ap-northeast-2.compute.amazonaws.com:3001/api" + userProfile
+                        Glide.with(this@WalletActivity).load(url).into(img_profile)
+                    }
+
+                } else { // code == 400
+                    val errorResponse: ErrorResult? = gson.fromJson(response.errorBody()!!.charStream(), type)
+                    Log.d(TAG2, "연결실패")
+                    when(errorResponse!!.code){
+                        // access토큰 만료
+                        40300 -> {
+                            postRefresh(refreshToken)
+                            getMyInfo(bearerAccessToken)
+                        }
+                    }
+                }
+            }
+            override fun onFailure(call: Call<ResultMyInfo>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
+    private fun putMyInfo(accessToken: String, editMyInfo: EditMyInfo){
+        RetrofitBuild.api.putMyInfo(accessToken,editMyInfo).enqueue(object : Callback<Result> {
+            override fun onResponse(call: Call<Result>, response: Response<Result>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+                    edit_user_dlg.dismiss()
+                } else { // code == 400
+                    val errorResponse: ErrorResult? = gson.fromJson(response.errorBody()!!.charStream(), type)
+                    Log.d(TAG2, "연결실패")
+                    when(errorResponse!!.code){
+                        40007 -> {
+                            postRefresh(refreshToken)
+                            putMyInfo(bearerAccessToken, editMyInfo)
+                        }
+                        40008 -> text_EditCheck.text = "이전 비밀번호가 일치하지 않습니다."
+                        // access토큰 만료
+                        40300 -> {
+                            postRefresh(refreshToken)
+                            putMyInfo(bearerAccessToken, editMyInfo)
+                        }
+                    }
+                }
+            }
+            override fun onFailure(call: Call<Result>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
+    private fun postImage(accessToken: String, body: MultipartBody.Part){
+        RetrofitBuild.api.postImage(accessToken,body).enqueue(object : Callback<ResultImageUrl> {
+            override fun onResponse(call: Call<ResultImageUrl>, response: Response<ResultImageUrl>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+                    userProfile = responseApi?.url
+                    if (editUserPassword == "") {
+                        val myInfo = EditMyInfo(userProfile, editUserName, null, null)
+                        text_name.text = editUserName
+                        putMyInfo(bearerAccessToken, myInfo)
+                    } else {
+                        val myInfo =
+                            EditMyInfo(userProfile, editUserName, editOldPassword, editUserPassword)
+                        text_name.text = editUserName
+                        putMyInfo(bearerAccessToken, myInfo)
+                    }
+                } else { // code == 400
+                    val errorResponse: ErrorResult? = gson.fromJson(response.errorBody()!!.charStream(), type)
+                    Log.d(TAG2, "연결실패")
+                    when(errorResponse!!.code){
+                        // access토큰 만료
+                        40300 -> {
+                            postRefresh(refreshToken)
+                            postImage(bearerAccessToken, body)
+                        }
+                    }
+                }
+            }
+            override fun onFailure(call: Call<ResultImageUrl>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
+    private fun postRefresh(refreshToken: RefreshToken){
+        RetrofitBuild.api.postRefresh(refreshToken).enqueue(object : Callback<ResultAndToken> {
+            override fun onResponse(call: Call<ResultAndToken>, response: Response<ResultAndToken>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+                    access_token = responseApi!!.access_token!!
+                    bearerAccessToken = "Bearer $access_token"
+                } else { // code == 400
+                    Log.d(TAG2, "연결실패")
+                    //refresh토큰 만료시 로그아웃
+                    AppPref.prefs.clearUser(this@WalletActivity)
+                    googleSignOut()
+                    val loginIntent = Intent(this@WalletActivity, LoginActivity::class.java)
+                    startActivity(loginIntent)
+                    finish()
+                }
+            }
+            override fun onFailure(call: Call<ResultAndToken>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
+    //-------------------------------------------------------------------------------------
+    //                                     Permission
+    //-------------------------------------------------------------------------------------
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == REQ_PERMISSION_GALLERY){
+            if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                openGallery()
+            } else{
+                Toast.makeText(this,"권한이 없어 해당 기능을 실행할 수 없습니다.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun galleryPermissionGranted(dlg: Dialog): Boolean {
+        val preference = getPreferences(Context.MODE_PRIVATE)
+        val isFirstCheck = preference.getBoolean("isFirstPermissionCheckGallery", true)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) ||
+                ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                dlg.dismiss()
+                // 거부할 경우 왜 필요한지 설명
+                val snackBar = Snackbar.make(layout_drawer, "권한이 필요합니다", Snackbar.LENGTH_INDEFINITE)
+                snackBar.setAction("권한승인") {
+                    ActivityCompat.requestPermissions(this,
+                        arrayOf(
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.READ_EXTERNAL_STORAGE
+                        ), REQ_PERMISSION_GALLERY
+                    )
+                }
+                snackBar.show()
+            } else {
+                if (isFirstCheck) {
+                    // 처음 물었는지 여부를 저장
+                    preference.edit().putBoolean("isFirstPermissionCheckGallery", false).apply()
+                    // 권한요청
+                    ActivityCompat.requestPermissions(this,
+                        arrayOf(
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.READ_EXTERNAL_STORAGE
+                        ), REQ_PERMISSION_GALLERY
+                    )
+                } else {
+                    // 사용자가 권한을 거부하면서 다시 묻지않음 옵션을 선택한 경우
+                    // requestPermission을 요청해도 창이 나타나지 않기 때문에 설정창으로 이동한
+                    val snackBar = Snackbar.make(layout_drawer, "권한이 필요합니다 확인을 누르시면 이동합니다", Snackbar.LENGTH_INDEFINITE)
+                    snackBar.setAction("확인") {
+                        val intent = Intent()
+                        intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        val uri = Uri.fromParts("package", packageName, null)
+                        intent.data = uri
+                        startActivity(intent)
+                    }
+                    snackBar.show()
+                }
+            }
+            return false
+        } else {
+            return true
+        }
     }
 }
