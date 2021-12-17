@@ -12,6 +12,9 @@ interface API{
     @POST("api/auth/login/google")
     fun postGoogle(@Body idToken: IdToken): Call<ResultAndToken>
 
+    @POST("api/auth/request/email-for-pwd")
+    fun postEmailForPwd(@Body email: Email): Call<Result>
+
     @POST("api/auth/confirm")
     fun postAuth(@Body authConfirm: AuthConfirm): Call<Result>
 
@@ -24,8 +27,12 @@ interface API{
     @POST("api/auth/refresh")
     fun postRefresh(@Body refreshToken: RefreshToken): Call<ResultAndToken>
 
+    @POST("api/auth/find-pwd")
+    fun postFindPwd(@Body emailPwd: EmailPwd): Call<Result>
+
     @GET("api/accounts")
     fun getAccount(@Header("Authorization") access_token: String): Call<ResultAccountList>
+    //@QueryMap page: Map<String, String>
 
     @POST("api/accounts")
     fun postAccount(@Header("Authorization") access_token: String, @Body account: Account): Call<ResultId>
@@ -38,6 +45,9 @@ interface API{
 
     @GET("api/accounts/{accountId}/transactions")
     fun getTransaction(@Header("Authorization") access_token: String, @Path("accountId") accountId: Int): Call<ResultTransactions>
+
+    @GET("api/transactions")
+    fun getAllTransaction(@Header("Authorization") access_token: String): Call<ResultTransactions>
 
     @POST("api/transactions")
     fun postTransaction(@Header("Authorization") access_token: String, @Body transaction: Transaction): Call<ResultId>

@@ -2,18 +2,15 @@ package com.checkmoney
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.Dialog
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Point
 import android.graphics.drawable.ColorDrawable
-import android.media.Image
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -30,7 +27,6 @@ import android.widget.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
-import androidx.core.widget.addTextChangedListener
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -55,6 +51,8 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.io.File
+import java.util.*
+import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
     private var mBackWait:Long = 0
@@ -62,14 +60,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private val type = object : TypeToken<ErrorResult>() {}.type
 
     private lateinit var profileAdapter: ProfileAdapter
-    private lateinit var layout_drawer: DrawerLayout
-    private lateinit var nav_header: View
+    private lateinit var layoutDrawer: DrawerLayout
+    private lateinit var navHeader: View
     private lateinit var rv_profile: RecyclerView
     private lateinit var btn_navi: ImageView
     private lateinit var img_profile: CircleImageView
     private lateinit var naviView: NavigationView
     private lateinit var text_email: TextView
     private lateinit var text_name: TextView
+    private lateinit var textTime: TextView
 
     private lateinit var edit_user_dlg: Dialog
     private lateinit var et_name: EditText
@@ -92,6 +91,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var bearerAccessToken: String
     private lateinit var pieChart: PieChart
     private lateinit var choiceImage: Bitmap
+    private lateinit var allTransaction: ArrayList<TransactionModel>
 
     private var editOldPassword = ""
     private var editUserPassword = ""
@@ -126,23 +126,27 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         getMyInfo(bearerAccessToken)
         // 계좌 받아오기
         getAccount(bearerAccessToken)
-        // pieChart 생성
-        createPieChart()
         // 내정보수정 dlg setting
         setEditUserInfoDlg()
 
         btn_navi.setOnClickListener {
-            layout_drawer.openDrawer(GravityCompat.START)
+            layoutDrawer.openDrawer(GravityCompat.START)
             profileAdapter.datas = ProfileDataList.datas
             profileAdapter.notifyDataSetChanged()
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // 모든 내역 받아와서 차트 띄우기
+        getAllTransAction(bearerAccessToken)
     }
 
     // recycler항목 추가
     @SuppressLint("NotifyDataSetChanged")
     private fun initRecycler(accountList: ArrayList<AccountModel>) {
         //어답터 생성
-        profileAdapter = ProfileAdapter(this,access_token,refresh_token,accountId,layout_drawer)
+        profileAdapter = ProfileAdapter(this,access_token,refresh_token,accountId,layoutDrawer)
         rv_profile.adapter = profileAdapter
 
         ProfileDataList.datas.clear()
@@ -160,14 +164,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     // 변수 초기화
     @SuppressLint("CutPasteId")
     private fun setVariable() {
-        layout_drawer = findViewById(R.id.layout_drawer)
+        layoutDrawer = findViewById(R.id.layout_drawer)
         btn_navi = findViewById(R.id.btn_navi)
         naviView = findViewById(R.id.naviView)
-        nav_header = naviView.getHeaderView(0)
-        rv_profile = nav_header.findViewById(R.id.rv_profile)
-        img_profile = nav_header.findViewById(R.id.img_profile)
-        text_email = nav_header.findViewById(R.id.text_email)
-        text_name = nav_header.findViewById(R.id.text_name)
+        navHeader = naviView.getHeaderView(0)
+        rv_profile = navHeader.findViewById(R.id.rv_profile)
+        img_profile = navHeader.findViewById(R.id.img_profile)
+        text_email = navHeader.findViewById(R.id.text_email)
+        text_name = navHeader.findViewById(R.id.text_name)
+        textTime = findViewById(R.id.text_time)
         pieChart = findViewById(R.id.pieChart)
     }
 
@@ -181,7 +186,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // drawer 헤드길이
         val height = size.y * (0.67)
         // 길이 적용
-        nav_header.layoutParams.height = height.toInt()
+        navHeader.layoutParams.height = height.toInt()
         naviView.layoutParams.width= width.toInt()
     }
 
@@ -193,6 +198,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val intent = getIntent()
         access_token = intent.getStringExtra("access_token")!!
         refresh_token = intent.getStringExtra("refresh_token")!!
+
+        ((ThisTime.cal.get(Calendar.MONTH) + 1).toString() + "월 사용내역").also { textTime.text = it }
 
         // refresfh토큰 초기화
         refreshToken.refresh_token = refresh_token
@@ -217,19 +224,76 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         //pieChart.legend.orientation = Legend.LegendOrientation.HORIZONTAL
         //pieChart.legend.isWordWrapEnabled = true
         // 차트에 데이터 추가
-        val dataEntries = ArrayList<PieEntry>()
-        dataEntries.add(PieEntry(56f, "식비"))
-        dataEntries.add(PieEntry(26f, "교통비"))
-        dataEntries.add(PieEntry(10f, "생활용품비"))
-        dataEntries.add(PieEntry(6f, "주거비"))
-        dataEntries.add(PieEntry(2f, "쇼핑"))
-        // 차트 색깔
+        val priceCategory = Array(8) { 0.0F }
         val colors: ArrayList<Int> = ArrayList()
-        colors.add(Color.parseColor("#0096FF"))
-        colors.add(Color.parseColor("#0064FF"))
-        colors.add(Color.parseColor("#4C39E1"))
-        colors.add(Color.parseColor("#FFF176"))
-        colors.add(Color.parseColor("#FF8A65"))
+        allTransaction.forEach {
+            if(it.is_consumption == 1 && it.category == 0){
+                priceCategory[0] = priceCategory[0] + it.price
+            }
+            else if(it.is_consumption == 1 && it.category == 1){
+                priceCategory[1] = priceCategory[1] + it.price
+            }
+            else if(it.is_consumption == 1 && it.category == 2){
+                priceCategory[2] = priceCategory[2] + it.price
+            }
+            else if(it.is_consumption == 1 && it.category == 3){
+                priceCategory[3] = priceCategory[3] + it.price
+            }
+            else if(it.is_consumption == 1 && it.category == 4){
+                priceCategory[4] = priceCategory[4] + it.price
+            }
+            else if(it.is_consumption == 1 && it.category == 5){
+                priceCategory[5] = priceCategory[5] + it.price
+            }
+            else if(it.is_consumption == 1 && it.category == 6){
+                priceCategory[6] = priceCategory[6] + it.price
+            }
+            else if(it.is_consumption == 1 && it.category == 7){
+                priceCategory[7] = priceCategory[7] + it.price
+            }
+        }
+        val totalPrice = priceCategory.sum()
+        val dataEntries = ArrayList<PieEntry>()
+        if(priceCategory[0] != 0.0F){
+            val category0 = priceCategory[0] / totalPrice * 100
+            dataEntries.add(PieEntry(category0, category.category[0]))
+            colors.add(Color.parseColor("#0096FF"))
+        }
+        if(priceCategory[1] != 0.0F){
+            val category0 = priceCategory[1] / totalPrice * 100
+            dataEntries.add(PieEntry(category0, category.category[1]))
+            colors.add(Color.parseColor("#0064FF"))
+        }
+        if(priceCategory[2] != 0.0F){
+            val category0 = priceCategory[2] / totalPrice * 100
+            dataEntries.add(PieEntry(category0, category.category[2]))
+            colors.add(Color.parseColor("#4C39E1"))
+        }
+        if(priceCategory[3] != 0.0F){
+            val category0 = priceCategory[3] / totalPrice * 100
+            dataEntries.add(PieEntry(category0, category.category[3]))
+            colors.add(Color.parseColor("#FFF176"))
+        }
+        if(priceCategory[4] != 0.0F){
+            val category0 = priceCategory[4] / totalPrice * 100
+            dataEntries.add(PieEntry(category0, category.category[4]))
+            colors.add(Color.parseColor("#FF8A65"))
+        }
+        if(priceCategory[5] != 0.0F){
+            val category0 = priceCategory[5] / totalPrice * 100
+            dataEntries.add(PieEntry(category0, category.category[5]))
+            colors.add(Color.parseColor("#CAF0F8"))
+        }
+        if(priceCategory[6] != 0.0F){
+            val category0 = priceCategory[6] / totalPrice * 100
+            dataEntries.add(PieEntry(category0, category.category[6]))
+            colors.add(Color.parseColor("#90E0EF"))
+        }
+        if(priceCategory[7] != 0.0F){
+            val category0 = priceCategory[7] / totalPrice * 100
+            dataEntries.add(PieEntry(category0, category.category[7]))
+            colors.add(Color.parseColor("#90C8EF"))
+        }
 
         // dataset
         val dataSet = PieDataSet(dataEntries, "")
@@ -291,7 +355,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
             // 홈버튼 클릭 - 메인화면
             R.id.home -> {
-                layout_drawer.closeDrawer(GravityCompat.START)
+                layoutDrawer.closeDrawer(GravityCompat.START)
             }
             // 내정보수정버튼 클릭 - 정보수정 dlg
             R.id.edit -> {
@@ -313,8 +377,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     // 뒤로가기 두번클릭 시 앱 종료
     override fun onBackPressed() {
         // drawer가 켜져있으면 닫기
-        if (layout_drawer.isDrawerOpen(GravityCompat.START)) {
-            layout_drawer.closeDrawer(GravityCompat.START)
+        if (layoutDrawer.isDrawerOpen(GravityCompat.START)) {
+            layoutDrawer.closeDrawer(GravityCompat.START)
         }
         // 아닐 시 두번누르면 앱 종료
         else {
@@ -685,7 +749,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     //-----------------------------------------------------------------------
 
     private fun getAccount(accessToken: String) {
-        RetrofitBuild.api.getAccount(accessToken).enqueue(object : Callback<ResultAccountList> {
+        val page = mapOf("page" to "1", "limit" to "5")
+        RetrofitBuild.api.getAccount(accessToken ).enqueue(object : Callback<ResultAccountList> {
             override fun onResponse(call: Call<ResultAccountList>, response: Response<ResultAccountList>) {
                 if(response.isSuccessful) { // <--> response.code == 200
                     Log.d(TAG2, "연결성공")
@@ -759,6 +824,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     userProfile = responseApi.img_url
                     // 네비뷰 헤더 정보(이메일, 이름) 초기화
                     text_userEmail.text = userEmail
+                    text_email.text = userEmail
                     text_name.text = userName
                     et_name.setText(userName)
                     if(userProfile == null){
@@ -887,6 +953,28 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         })
     }
 
+    private fun getAllTransAction(accessToken: String){
+        RetrofitBuild.api.getAllTransaction(accessToken).enqueue(object : Callback<ResultTransactions> {
+            override fun onResponse(call: Call<ResultTransactions>, response: Response<ResultTransactions>) {
+                if(response.isSuccessful) { // <--> response.code == 200
+                    Log.d(TAG2, "연결성공")
+                    val responseApi = response.body()
+                    Log.d(TAG2,responseApi.toString())
+                    allTransaction = responseApi!!.rows
+                    // pieChart 생성
+                    createPieChart()
+                } else { // code == 400
+                    Log.d(TAG2, "연결실패")
+                }
+            }
+            override fun onFailure(call: Call<ResultTransactions>, t: Throwable) { // code == 500
+                // 실패 처리
+                Log.d(TAG2, "인터넷 네트워크 문제")
+                Log.d(TAG2, t.toString())
+            }
+        })
+    }
+
     //-------------------------------------------------------------------------------------
     //                                      Permission
     //-------------------------------------------------------------------------------------
@@ -917,7 +1005,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
                     dlg.dismiss()
                 // 거부할 경우 왜 필요한지 설명
-                val snackBar = Snackbar.make(layout_drawer, "권한이 필요합니다", Snackbar.LENGTH_INDEFINITE)
+                val snackBar = Snackbar.make(layoutDrawer, "권한이 필요합니다", Snackbar.LENGTH_INDEFINITE)
                 snackBar.setAction("권한승인") {
                     ActivityCompat.requestPermissions(this,
                         arrayOf(
@@ -941,7 +1029,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 } else {
                     // 사용자가 권한을 거부하면서 다시 묻지않음 옵션을 선택한 경우
                     // requestPermission을 요청해도 창이 나타나지 않기 때문에 설정창으로 이동한
-                    val snackBar = Snackbar.make(layout_drawer, "권한이 필요합니다 확인을 누르시면 이동합니다", Snackbar.LENGTH_INDEFINITE)
+                    val snackBar = Snackbar.make(layoutDrawer, "권한이 필요합니다 확인을 누르시면 이동합니다", Snackbar.LENGTH_INDEFINITE)
                     snackBar.setAction("확인") {
                         val intent = Intent()
                         intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS

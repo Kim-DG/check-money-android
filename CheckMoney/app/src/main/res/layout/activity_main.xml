@@ -41,6 +41,7 @@
             app:layout_constraintTop_toBottomOf="@+id/img_logo">
 
             <TextView
+                android:id="@+id/text_time"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="25dp"
@@ -50,6 +51,8 @@
                 android:text="12월 사용내역"
                 android:textColor="@color/logoBlue"
                 android:textSize="25sp" />
+
+
 
         </LinearLayout>
 

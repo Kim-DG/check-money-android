@@ -12,8 +12,8 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="horizontal"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
+        android:paddingTop="3dp"
+        android:paddingBottom="3dp"
         tools:layout_editor_absoluteX="1dp"
         tools:layout_editor_absoluteY="1dp">
 
@@ -28,29 +28,38 @@
             android:textColor="@color/logoSkyBlue"
             android:textSize="20sp" />
 
-        <TextView
-            android:id="@+id/text_price"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginEnd="15dp"
-            android:fontFamily="@font/spoqahansansneo_medium"
-            android:text="금액"
-            android:textAllCaps="false"
-            android:textColor="@color/logoSkyBlue"
-            android:textSize="15sp" />
-
-        <TextView
-            android:id="@+id/text_category"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
             android:layout_marginEnd="5dp"
-            android:fontFamily="@font/spoqahansansneo_medium"
-            android:text="카테고리"
-            android:textAllCaps="false"
-            android:textColor="@color/logoSkyBlue"
-            android:textSize="15sp" />
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/text_price"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:gravity="end"
+                android:fontFamily="@font/spoqahansansneo_medium"
+                android:text="금액"
+                android:textAllCaps="false"
+                android:textColor="@color/logoSkyBlue"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/text_category"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:fontFamily="@font/spoqahansansneo_medium"
+                android:text="카테고리"
+                android:textAllCaps="false"
+                android:textColor="@color/logoSkyBlue"
+                android:textSize="15sp" />
+
+        </LinearLayout>
+
+
     </LinearLayout>
 
     <View

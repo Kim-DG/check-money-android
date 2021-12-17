@@ -33,6 +33,11 @@ data class RefreshToken(
     var refresh_token: String?
 )
 
+data class EmailPwd(
+    var email: String,
+    var newPassword: String
+)
+
 data class Account(
     var title: String,
     var description: String

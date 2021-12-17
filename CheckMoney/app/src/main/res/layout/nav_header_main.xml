@@ -39,7 +39,7 @@
 
                 <de.hdodenhof.circleimageview.CircleImageView
                     android:id="@+id/img_profile"
-                    android:layout_margin="10dp"
+                    android:layout_marginBottom="10dp"
                     android:layout_width="80dp"
                     android:layout_height="80dp" />
             </LinearLayout>
@@ -69,7 +69,7 @@
                     android:fontFamily="@font/spoqahansansneo_medium"
                     android:text="name"
                     android:textColor="@color/white"
-                    android:textSize="20sp" />
+                    android:textSize="15sp" />
 
             </LinearLayout>
         </LinearLayout>

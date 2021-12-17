@@ -150,11 +150,52 @@
                 android:layout_height="1dp"
                 android:background="@drawable/side_nav_bar" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/text_month"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/spoqahansansneo_regular"
+                    android:gravity="end"
+                    android:padding="10dp"
+                    android:text="12월 총액"
+                    android:textColor="@color/logopurple"
+                    android:textSize="15sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
+
+                <TextView
+                    android:id="@+id/text_part_price"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/spoqahansansneo_regular"
+                    android:gravity="end"
+                    android:padding="10dp"
+                    android:text="10,000원"
+                    android:textColor="@color/logopurple"
+                    android:textSize="15sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+            </LinearLayout>
+
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@drawable/side_nav_bar" />
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_profile"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginTop="20dp"
                 android:orientation="vertical"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 app:layout_constraintLeft_toLeftOf="parent"
@@ -162,30 +203,17 @@
                 app:layout_constraintTop_toTopOf="parent"/>
         </LinearLayout>
 
-        <Button
-            android:id="@+id/btn_add"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:layout_marginEnd="10dp"
-            android:background="@drawable/logo"
-            android:elevation="20dp"
-            app:layout_constraintBottom_toTopOf="@+id/text_add"
-            app:layout_constraintEnd_toEndOf="parent"
-            tools:ignore="SpeakableTextPresentCheck" />
 
-        <TextView
-            android:id="@+id/text_add"
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btn_add"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:fontFamily="@font/spoqahansansneo_regular"
-            android:gravity="center"
-            android:text="내역추가"
-            android:textColor="@color/logoBlue"
-            android:textSize="15sp"
+            android:layout_gravity="end|bottom"
+            android:layout_margin="16dp"
+            android:backgroundTint="@color/logoSkyBlue"
+            android:src="@drawable/ic_baseline_add_24"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/btn_add"
-            app:layout_constraintStart_toStartOf="@+id/btn_add"/>
+            app:layout_constraintEnd_toEndOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

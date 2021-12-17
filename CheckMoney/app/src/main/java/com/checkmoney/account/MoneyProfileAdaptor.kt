@@ -75,25 +75,26 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
             val format = DecimalFormat("#,###")
             var price = ""
             if (item.is_consumption == 0) {
-                price = "+" + format.format(item.price)
+                price = "+" + format.format(item.price) + " 원"
                 text_price.setTextColor(
                     ContextCompat.getColor(context,
                     R.color.logoBlue
                 ))
             }
             else if(item.is_consumption == 1){
-                price = "-" + format.format(item.price)
+                price = "-" + format.format(item.price) + " 원"
                 text_price.setTextColor(
                     ContextCompat.getColor(context,
                         R.color.red
                     ))
             }
 
-            MoneyProfileDataList.datas
-
             text_detail.text = item.detail
             text_price.text = price
-            text_category.text = category.category[item.category]
+            if(item.is_consumption == 1)
+                text_category.text = category.category[item.category]
+            else
+                text_category.text = "수입"
 
             itemView.setOnClickListener {
                 val dlg = Dialog(context)
@@ -173,7 +174,7 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
                     }
                 }
 
-                spinner2.setSelection(0)
+                spinner2.setSelection(1)
                 spinner2.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
                     override fun onItemSelected(
                         parent: AdapterView<*>?,
