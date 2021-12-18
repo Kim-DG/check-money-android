@@ -21,4 +21,12 @@
     </style>
     <style name="Theme.CheckMoney.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
     <style name="Theme.CheckMoney.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="tab_text" parent="@android:style/TextAppearance.Widget.TabWidget">
+        <item name="android:fontFamily">@font/spoqahansansneo_medium</item>
+        <item name="android:textColor">@color/logopurple</item>
+        <item name="android:textSize">15dp</item>
+        <item name="android:fontStyle">normal</item>
+
+    </style>
 </resources>

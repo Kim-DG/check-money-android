@@ -28,7 +28,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.charts.PieChart
@@ -41,6 +44,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import de.hdodenhof.circleimageview.CircleImageView
@@ -68,7 +73,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var naviView: NavigationView
     private lateinit var text_email: TextView
     private lateinit var text_name: TextView
-    private lateinit var textTime: TextView
 
     private lateinit var edit_user_dlg: Dialog
     private lateinit var et_name: EditText
@@ -84,6 +88,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var btn_cancle: Button
     private lateinit var btn_getImage: TextView
     private lateinit var body : MultipartBody.Part
+    private lateinit var viewpager: ViewPager2
+    private lateinit var tabs: TabLayout
 
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var access_token: String
@@ -128,6 +134,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         getAccount(bearerAccessToken)
         // 내정보수정 dlg setting
         setEditUserInfoDlg()
+        //viewpager2, tablayout 표시 및 연동
 
         btn_navi.setOnClickListener {
             layoutDrawer.openDrawer(GravityCompat.START)
@@ -161,6 +168,28 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    private fun renderViewPager() {
+        viewpager.adapter = object : FragmentStateAdapter(this) {
+
+            override fun createFragment(position: Int): Fragment {
+                val bundle = Bundle()
+                bundle.putParcelableArrayList("transaction", allTransaction)
+                ResourceStore.pagerFragments[position].arguments = bundle
+                return ResourceStore.pagerFragments[position]
+            }
+
+            override fun getItemCount(): Int {
+                return ResourceStore.tabList.size
+            }
+        }
+    }
+
+    private fun renderTabLayer() {
+        TabLayoutMediator(tabs, viewpager) { tab, position ->
+            tab.text = ResourceStore.tabList[position]
+        }.attach()
+    }
+
     // 변수 초기화
     @SuppressLint("CutPasteId")
     private fun setVariable() {
@@ -172,8 +201,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         img_profile = navHeader.findViewById(R.id.img_profile)
         text_email = navHeader.findViewById(R.id.text_email)
         text_name = navHeader.findViewById(R.id.text_name)
-        textTime = findViewById(R.id.text_time)
-        pieChart = findViewById(R.id.pieChart)
+        viewpager = findViewById(R.id.viewpager)
+        tabs = findViewById(R.id.tabs)
     }
 
     // drawer layout 사이즈 조절
@@ -198,8 +227,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val intent = getIntent()
         access_token = intent.getStringExtra("access_token")!!
         refresh_token = intent.getStringExtra("refresh_token")!!
-
-        ((ThisTime.cal.get(Calendar.MONTH) + 1).toString() + "월 사용내역").also { textTime.text = it }
 
         // refresfh토큰 초기화
         refreshToken.refresh_token = refresh_token
@@ -961,8 +988,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     val responseApi = response.body()
                     Log.d(TAG2,responseApi.toString())
                     allTransaction = responseApi!!.rows
-                    // pieChart 생성
-                    createPieChart()
+                    // viewpager 생성
+                    renderViewPager()
+                    renderTabLayer()
                 } else { // code == 400
                     Log.d(TAG2, "연결실패")
                 }

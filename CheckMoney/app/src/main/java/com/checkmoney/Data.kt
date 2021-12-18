@@ -1,6 +1,9 @@
 package com.checkmoney
 
+import android.annotation.SuppressLint
 import android.os.Parcelable
+import com.checkmoney.Main.TabFragmentMonth
+import com.checkmoney.Main.TabFragmentYear
 import kotlinx.parcelize.Parcelize
 import java.util.*
 import kotlin.collections.ArrayList
@@ -50,6 +53,7 @@ data class AccountModel(
     var createdAt: String
 )
 
+@Parcelize
 data class TransactionModel(
     var id: Int,
     var is_consumption: Int,
@@ -58,7 +62,7 @@ data class TransactionModel(
     var date: String,
     var category: Int,
     var account_id: Int
-)
+):Parcelable
 
 data class Transaction(
     var is_consumption: Int,
@@ -197,5 +201,15 @@ object category{
 
 object consumption{
     val consumption: ArrayList<String> = arrayListOf("수입", "지출")
+}
+
+interface ResourceStore {
+    companion object {
+        val tabList = listOf(
+            "월별 차트","연도별 차트"
+        )
+        val pagerFragments = listOf(
+            TabFragmentMonth.create(), TabFragmentYear.create())
+    }
 }
 
