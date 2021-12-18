@@ -1,44 +1,86 @@
 package com.checkmoney.Main
 
+import android.annotation.SuppressLint
 import android.graphics.Color
+import android.media.Image
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
-import com.checkmoney.R
-import com.checkmoney.TransactionModel
-import com.checkmoney.category
+import com.checkmoney.*
 import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.PercentFormatter
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 class TabFragmentMonth : Fragment() {
     private lateinit var allTransaction: ArrayList<TransactionModel>
+    private lateinit var filterTransaction: MutableList<TransactionModel>
     private lateinit var pieChart: PieChart
+    private lateinit var textYm: TextView
+    private lateinit var textVisible: TextView
+    private lateinit var btnLeft: ImageView
+    private lateinit var btnRight: ImageView
+    private var cal: Calendar = Calendar.getInstance()
+
+    @SuppressLint("SimpleDateFormat")
+    private val df = SimpleDateFormat("yyyy/MM")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let{
+        arguments?.let {
             allTransaction = it.getParcelableArrayList("transaction")!!
         }
     }
-    override fun onCreateView (
+
+    override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        pieChart = inflater.inflate(R.layout.fragment_month, container).findViewById(R.id.pieChart)
-        return inflater.inflate(R.layout.fragment_month, container)
-    }
+        val view: View? = inflater.inflate(R.layout.fragment_month, container)
+        pieChart = view!!.findViewById(R.id.pieChart)
+        textYm = view.findViewById(R.id.text_ym)
+        textVisible = view.findViewById(R.id.text_visible)
+        btnLeft = view.findViewById(R.id.btn_left)
+        btnRight = view.findViewById(R.id.btn_right)
 
-    override fun onStart() {
-        super.onStart()
+        textYm.text = df.format(cal.time)
+
         createPieChart()
+
+        btnLeft.setOnClickListener {
+            if (cal.get(Calendar.MONTH) == 0) {
+                cal.add(Calendar.MONTH, 11)
+                cal.add(Calendar.YEAR, -1)
+            } else {
+                cal.add(Calendar.MONTH, -1)
+            }
+            textYm.text = df.format(cal.time)
+            createPieChart()
+        }
+
+        // 다음 월로 이동
+        btnRight.setOnClickListener {
+            if (cal.get(Calendar.MONTH) == 11) {
+                cal.add(Calendar.MONTH, -11)
+                cal.add(Calendar.YEAR, 1)
+            } else {
+                cal.add(Calendar.MONTH, 1)
+            }
+            textYm.text = df.format(cal.time)
+            createPieChart()
+        }
+        return view
     }
 
     // 차트 생성
@@ -60,70 +102,76 @@ class TabFragmentMonth : Fragment() {
         // 차트에 데이터 추가
         val priceCategory = Array(8) { 0.0F }
         val colors: ArrayList<Int> = ArrayList()
-        allTransaction.forEach {
-            if(it.is_consumption == 1 && it.category == 0){
+
+        filterTransaction = allTransaction.filter {
+            it.date.split("-")[0] == cal.get(Calendar.YEAR).toString() &&
+                    it.date.split("-")[1] == (cal.get(Calendar.MONTH) + 1).toString() &&
+                    it.is_consumption == 1
+        }.toMutableList()
+
+        if(filterTransaction.size != 0)
+            textVisible.visibility = View.INVISIBLE
+        else
+            textVisible.visibility = View.VISIBLE
+
+        filterTransaction.forEach {
+            if (it.is_consumption == 1 && it.category == 0) {
                 priceCategory[0] = priceCategory[0] + it.price
-            }
-            else if(it.is_consumption == 1 && it.category == 1){
+            } else if (it.is_consumption == 1 && it.category == 1) {
                 priceCategory[1] = priceCategory[1] + it.price
-            }
-            else if(it.is_consumption == 1 && it.category == 2){
+            } else if (it.is_consumption == 1 && it.category == 2) {
                 priceCategory[2] = priceCategory[2] + it.price
-            }
-            else if(it.is_consumption == 1 && it.category == 3){
+            } else if (it.is_consumption == 1 && it.category == 3) {
                 priceCategory[3] = priceCategory[3] + it.price
-            }
-            else if(it.is_consumption == 1 && it.category == 4){
+            } else if (it.is_consumption == 1 && it.category == 4) {
                 priceCategory[4] = priceCategory[4] + it.price
-            }
-            else if(it.is_consumption == 1 && it.category == 5){
+            } else if (it.is_consumption == 1 && it.category == 5) {
                 priceCategory[5] = priceCategory[5] + it.price
-            }
-            else if(it.is_consumption == 1 && it.category == 6){
+            } else if (it.is_consumption == 1 && it.category == 6) {
                 priceCategory[6] = priceCategory[6] + it.price
-            }
-            else if(it.is_consumption == 1 && it.category == 7){
+            } else if (it.is_consumption == 1 && it.category == 7) {
                 priceCategory[7] = priceCategory[7] + it.price
             }
         }
+
         val totalPrice = priceCategory.sum()
         val dataEntries = ArrayList<PieEntry>()
-        if(priceCategory[0] != 0.0F){
+        if (priceCategory[0] != 0.0F) {
             val category0 = priceCategory[0] / totalPrice * 100
             dataEntries.add(PieEntry(category0, category.category[0]))
             colors.add(Color.parseColor("#0096FF"))
         }
-        if(priceCategory[1] != 0.0F){
+        if (priceCategory[1] != 0.0F) {
             val category0 = priceCategory[1] / totalPrice * 100
             dataEntries.add(PieEntry(category0, category.category[1]))
             colors.add(Color.parseColor("#0064FF"))
         }
-        if(priceCategory[2] != 0.0F){
+        if (priceCategory[2] != 0.0F) {
             val category0 = priceCategory[2] / totalPrice * 100
             dataEntries.add(PieEntry(category0, category.category[2]))
             colors.add(Color.parseColor("#4C39E1"))
         }
-        if(priceCategory[3] != 0.0F){
+        if (priceCategory[3] != 0.0F) {
             val category0 = priceCategory[3] / totalPrice * 100
             dataEntries.add(PieEntry(category0, category.category[3]))
             colors.add(Color.parseColor("#FFF176"))
         }
-        if(priceCategory[4] != 0.0F){
+        if (priceCategory[4] != 0.0F) {
             val category0 = priceCategory[4] / totalPrice * 100
             dataEntries.add(PieEntry(category0, category.category[4]))
             colors.add(Color.parseColor("#FF8A65"))
         }
-        if(priceCategory[5] != 0.0F){
+        if (priceCategory[5] != 0.0F) {
             val category0 = priceCategory[5] / totalPrice * 100
             dataEntries.add(PieEntry(category0, category.category[5]))
             colors.add(Color.parseColor("#CAF0F8"))
         }
-        if(priceCategory[6] != 0.0F){
+        if (priceCategory[6] != 0.0F) {
             val category0 = priceCategory[6] / totalPrice * 100
             dataEntries.add(PieEntry(category0, category.category[6]))
             colors.add(Color.parseColor("#90E0EF"))
         }
-        if(priceCategory[7] != 0.0F){
+        if (priceCategory[7] != 0.0F) {
             val category0 = priceCategory[7] / totalPrice * 100
             dataEntries.add(PieEntry(category0, category.category[7]))
             colors.add(Color.parseColor("#90C8EF"))

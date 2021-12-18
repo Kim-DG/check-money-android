@@ -992,7 +992,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     renderViewPager()
                     renderTabLayer()
                 } else { // code == 400
+                    val errorResponse: ErrorResult? = gson.fromJson(response.errorBody()!!.charStream(), type)
                     Log.d(TAG2, "연결실패")
+                    when(errorResponse!!.code){
+                        // access토큰 만료
+                        40300 -> {
+                            postRefresh(refreshToken)
+                            postImage(bearerAccessToken, body)
+                        }
+                    }
                 }
             }
             override fun onFailure(call: Call<ResultTransactions>, t: Throwable) { // code == 500
