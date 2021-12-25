@@ -54,13 +54,13 @@ import java.util.*
 
 class WalletActivity : AppCompatActivity(), CalTotal,
     NavigationView.OnNavigationItemSelectedListener {
-    private val moneyDataList = MoneyProfileDataList
     private val gson = Gson()
     private val type = object : TypeToken<ErrorResult>() {}.type
 
     private lateinit var walletData: ProfileData
     private lateinit var moneyProfileadapter: MoneyProfileAdapter
     private lateinit var profileAdapter: ProfileAdapter
+    private lateinit var subsProfileAdapter: SubscriptionProfileAdaptor
     private lateinit var moneyRvProfile: RecyclerView
     private lateinit var rvProfile: RecyclerView
     private lateinit var layoutDrawer: DrawerLayout
@@ -75,6 +75,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
     private lateinit var btnIncome: TextView
     private lateinit var btnNavi: ImageView
     private lateinit var btnAdd: FloatingActionButton
+    private lateinit var btnAddTimer: FloatingActionButton
     private lateinit var textYm: TextView
     private lateinit var textEmail: TextView
     private lateinit var textName: TextView
@@ -153,6 +154,8 @@ class WalletActivity : AppCompatActivity(), CalTotal,
         getMyInfo(bearerAccessToken)
         // 내역 받아오기
         getTransaction(bearerAccessToken)
+
+        getSubscriptions(bearerAccessToken)
         // 내정보수정 dlg setting
         setEditUserInfoDlg()
 
@@ -196,7 +199,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
             ((ThisTime.cal.get(Calendar.MONTH) + 1).toString() + "월 총액").also {
                 textMonth.text = it
             }
-            val filterDatas = (moneyDataList.datas.filter {
+            val filterDatas = (MoneyProfileDataList.datas.filter {
                 (it.date.date.month == String.format(
                     "%02d",
                     (ThisTime.cal.get(Calendar.MONTH) + 1)
@@ -213,15 +216,14 @@ class WalletActivity : AppCompatActivity(), CalTotal,
             val format = DecimalFormat("#,###")
             var strPrice = format.format(totalPrice)
             strPrice += " 원"
-            if(totalPrice >= 0){
+            if (totalPrice >= 0) {
                 textPartPrice.setTextColor(
                     ContextCompat.getColor(
                         this,
                         R.color.logopurple
                     )
                 )
-            }
-            else
+            } else
                 textPartPrice.setTextColor(
                     ContextCompat.getColor(
                         this,
@@ -240,7 +242,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
             ((ThisTime.cal.get(Calendar.MONTH) + 1).toString() + "월 지출 합계").also {
                 textMonth.text = it
             }
-            val filterDatas = (moneyDataList.datas.filter {
+            val filterDatas = (MoneyProfileDataList.datas.filter {
                 (it.date.date.month == String.format(
                     "%02d",
                     (ThisTime.cal.get(Calendar.MONTH) + 1)
@@ -249,7 +251,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
             }).toMutableList()
             var totalPrice = 0
             filterDatas.forEach {
-                    totalPrice += it.price
+                totalPrice += it.price
             }
             val format = DecimalFormat("#,###")
             var strPrice = format.format(totalPrice)
@@ -273,7 +275,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
             ((ThisTime.cal.get(Calendar.MONTH) + 1).toString() + "월 수입 합계").also {
                 textMonth.text = it
             }
-            val filterDatas = (moneyDataList.datas.filter {
+            val filterDatas = (MoneyProfileDataList.datas.filter {
                 (it.date.date.month == String.format(
                     "%02d",
                     (ThisTime.cal.get(Calendar.MONTH) + 1)
@@ -300,6 +302,10 @@ class WalletActivity : AppCompatActivity(), CalTotal,
         // 내역 추가
         btnAdd.setOnClickListener {
             addDetail()
+        }
+
+        btnAddTimer.setOnClickListener {
+            addSubscription()
         }
 
         btnNavi.setOnClickListener {
@@ -338,8 +344,8 @@ class WalletActivity : AppCompatActivity(), CalTotal,
     @SuppressLint("NotifyDataSetChanged")
     private fun incomeInitRecycler() {
         // 필터링으로 수입만 표시
-        moneyDataList.datas.apply {
-            val filterDatas = (moneyDataList.datas.filter {
+        MoneyProfileDataList.datas.apply {
+            val filterDatas = (MoneyProfileDataList.datas.filter {
                 (it.date.date.month == String.format(
                     "%02d",
                     (ThisTime.cal.get(Calendar.MONTH) + 1)
@@ -355,8 +361,8 @@ class WalletActivity : AppCompatActivity(), CalTotal,
     @SuppressLint("NotifyDataSetChanged")
     private fun expenseInitRecycler() {
         // 필터링으로 지출만 표시
-        moneyDataList.datas.apply {
-            val filterDatas = (moneyDataList.datas.filter {
+        MoneyProfileDataList.datas.apply {
+            val filterDatas = (MoneyProfileDataList.datas.filter {
                 (it.date.date.month == String.format(
                     "%02d",
                     (ThisTime.cal.get(Calendar.MONTH) + 1)
@@ -508,6 +514,141 @@ class WalletActivity : AppCompatActivity(), CalTotal,
         }
     }
 
+    private fun addSubscription() {
+        val dlg = Dialog(this@WalletActivity)
+        dlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
+        dlg.setContentView(R.layout.dialog_subscription_list)     //다이얼로그에 사용할 xml 파일을 불러옴
+        dlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dlg.show()
+
+        val rvSubscription = dlg.findViewById<RecyclerView>(R.id.rv_subscription)
+        val btnAdd = dlg.findViewById<Button>(R.id.btn_add)
+        val btnCancle = dlg.findViewById<Button>(R.id.btn_cancel)
+
+        rvSubscription.adapter = subsProfileAdapter
+
+        btnAdd.setOnClickListener {
+            val dlgDate = Dialog(this@WalletActivity)
+            dlgDate.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
+            dlgDate.setContentView(R.layout.dialog_datepicker_subs)     //다이얼로그에 사용할 xml 파일을 불러옴
+            dlgDate.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            dlgDate.show()
+
+            val et_detail = dlgDate.findViewById<EditText>(R.id.et_detail)
+            val et_price = dlgDate.findViewById<EditText>(R.id.et_price)
+            val btn_choice = dlgDate.findViewById<Button>(R.id.btn_choice)
+            val btn_cancle = dlgDate.findViewById<Button>(R.id.btn_cancel)
+            val spinner = dlgDate.findViewById<Spinner>(R.id.spinner)
+            val spinner2 = dlgDate.findViewById<Spinner>(R.id.spinner2)
+            val text_alarm = dlgDate.findViewById<TextView>(R.id.text_alarm)
+
+            val year: NumberPicker = dlgDate.findViewById(R.id.yearpicker_datepicker)
+            val month: NumberPicker = dlgDate.findViewById(R.id.monthpicker_datepicker)
+            val day: NumberPicker = dlgDate.findViewById(R.id.daypicker_datepicker)
+
+
+            val adapter = ArrayAdapter(this, R.layout.spinner_layout, SpinnerArray.sData)
+            spinner.adapter = adapter
+
+            val adapter2 = ArrayAdapter(this, R.layout.spinner_layout, SpinnerArray.sData2)
+            spinner2.adapter = adapter2
+
+            // datepicker의 회전여부
+            year.wrapSelectorWheel = false
+            month.wrapSelectorWheel = false
+            day.wrapSelectorWheel = false
+
+            // 최소값 설정
+            year.minValue = 2021
+            month.minValue = 1
+            day.minValue = 1
+
+            // 최대값 설정
+            year.maxValue = 2025
+            month.maxValue = 12
+            day.maxValue = 31
+
+            // 수입, 지출 여부
+            var is_consumtion = 0
+            // 카테고리 포지션
+            var category = 0
+
+            // 현재 시각
+            val c = System.currentTimeMillis()
+            val a = Date(c)
+
+            val strYear = yf.format(a)
+            val strMonth = mf.format(a)
+            val strDay = qf.format(a)
+
+            year.value = strYear.toInt()
+            month.value = strMonth.toInt()
+            day.value = strDay.toInt()
+
+            spinner.setSelection(0)
+            spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    category = position
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    TODO("Not yet implemented")
+                }
+            }
+
+            spinner2.setSelection(1)
+            spinner2.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    if (SpinnerArray.sData2[position] == "지출") {
+                        is_consumtion = 1
+                    } else
+                        is_consumtion = 0
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    TODO("Not yet implemented")
+                }
+            }
+
+            btn_choice.setOnClickListener {
+                if (et_detail.text.toString() == "" || et_price.text.toString() == "") {
+                    text_alarm.text = "사용내역과 금액을 입력해 주세요."
+                } else {
+                    // 추가한 내역 서버로 전송
+                    val transaction = Transaction(
+                        is_consumption = is_consumtion,
+                        price = et_price.text.toString().toInt(),
+                        detail = et_detail.text.toString(),
+                        date = "${year.value}-${month.value}-${day.value}",
+                        category = category,
+                        account_id = accountId
+                    )
+                    postSubscriptions(bearerAccessToken, transaction)
+                    dlgDate.dismiss()
+                    text_alarm.text = ""
+                }
+            }
+
+            btn_cancle.setOnClickListener {
+                dlgDate.dismiss()
+            }
+        }
+        btnCancle.setOnClickListener {
+            dlg.dismiss()
+        }
+
+    }
+
     //변수 초기화 및 세팅
     private fun setVariable() {
         layoutDrawer = findViewById(R.id.layout_drawer)
@@ -525,6 +666,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
         btnIncome = findViewById(R.id.btn_income)
         btnNavi = findViewById(R.id.btn_navi)
         btnAdd = findViewById(R.id.btn_add)
+        btnAddTimer = findViewById(R.id.btn_add_time)
         textYm = findViewById(R.id.text_ym)
         textEmail = navHeader.findViewById(R.id.text_email)
         textName = navHeader.findViewById(R.id.text_name)
@@ -559,6 +701,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
         accountId = intent.getIntExtra("accountId", -1)
         bearerAccessToken = "Bearer $access_token"
 
+        subsProfileAdapter = SubscriptionProfileAdaptor(this, accountId, bearerAccessToken)
         moneyProfileadapter = MoneyProfileAdapter(this, this, accountId, bearerAccessToken)
         moneyRvProfile.adapter = moneyProfileadapter
     }
@@ -566,9 +709,9 @@ class WalletActivity : AppCompatActivity(), CalTotal,
     //recycler항목 추가, 전체내역표시
     @SuppressLint("NotifyDataSetChanged")
     private fun initRecycler() {
-        moneyDataList.datas.apply {
+        MoneyProfileDataList.datas.apply {
             val total_datas_list =
-                moneyDataList.datas.distinctBy { MoneyProfileData -> MoneyProfileData.date }
+                MoneyProfileDataList.datas.distinctBy { MoneyProfileData -> MoneyProfileData.date }
             val filterDatas = total_datas_list.filter {
                 (it.date.date.month == String.format(
                     "%02d",
@@ -595,8 +738,8 @@ class WalletActivity : AppCompatActivity(), CalTotal,
 
     @SuppressLint("SetTextI18n")
     private fun initTotalPrice() {
-        val plus = moneyDataList.datas.filter { it.is_consumption == 0 }
-        val minus = moneyDataList.datas.filter { it.is_consumption == 1 }
+        val plus = MoneyProfileDataList.datas.filter { it.is_consumption == 0 }
+        val minus = MoneyProfileDataList.datas.filter { it.is_consumption == 1 }
         plus.forEach { totalPrice += it.price }
         minus.forEach { totalPrice -= it.price }
         val format = DecimalFormat("#,###")
@@ -1129,8 +1272,9 @@ class WalletActivity : AppCompatActivity(), CalTotal,
                             )
                             calTotalPrice(it.is_consumption, it.price)
                         }
-                        moneyDataList.datas = moneyDataList.datas.distinct().toMutableList()
-                        moneyDataList.datas.sortWith(compareByDescending<MoneyProfileData> { it.date.date.year }.thenByDescending { it.date.date.month }
+                        MoneyProfileDataList.datas =
+                            MoneyProfileDataList.datas.distinct().toMutableList()
+                        MoneyProfileDataList.datas.sortWith(compareByDescending<MoneyProfileData> { it.date.date.year }.thenByDescending { it.date.date.month }
                             .thenByDescending { it.date.date.day }
                             .thenByDescending { it.date.type })
                         btnTotal.callOnClick()
@@ -1166,15 +1310,16 @@ class WalletActivity : AppCompatActivity(), CalTotal,
                         val responseApi = response.body()
                         dateData.date.id = -1
                         priceData.date.id = responseApi!!.id
-                        moneyDataList.datas.apply {
+                        MoneyProfileDataList.datas.apply {
                             add(dateData)
                             add(priceData)
                         }
-                        moneyDataList.datas = moneyDataList.datas.distinct().toMutableList()
-                        moneyDataList.datas.sortWith(compareByDescending<MoneyProfileData> { it.date.date.year }.thenByDescending { it.date.date.month }
+                        MoneyProfileDataList.datas =
+                            MoneyProfileDataList.datas.distinct().toMutableList()
+                        MoneyProfileDataList.datas.sortWith(compareByDescending<MoneyProfileData> { it.date.date.year }.thenByDescending { it.date.date.month }
                             .thenByDescending { it.date.date.day }
                             .thenByDescending { it.date.type })
-                        Log.d("!!!!!!!!!!!!!!!!!!!!!", moneyDataList.datas.toString())
+                        Log.d("!!!!!!!!!!!!!!!!!!!!!", MoneyProfileDataList.datas.toString())
                         btnTotal.callOnClick()
                         Log.d(TAG2, responseApi.toString())
                     } else { // code == 400
@@ -1314,6 +1459,88 @@ class WalletActivity : AppCompatActivity(), CalTotal,
         })
     }
 
+    // 고정지출 내역 받아오기
+    private fun getSubscriptions(accessToken: String) {
+        RetrofitBuild.api.getSubscriptions(accessToken, accountId)
+            .enqueue(object : Callback<ResultTransactions> {
+                @SuppressLint("NotifyDataSetChanged")
+                override fun onResponse(
+                    call: Call<ResultTransactions>,
+                    response: Response<ResultTransactions>
+                ) {
+                    if (response.isSuccessful) { // <--> response.code == 200
+                        Log.d(TAG2, "연결성공")
+                        val responseApi = response.body()
+                        Log.d(TAG2, responseApi.toString())
+
+                        responseApi!!.rows.forEach {
+                            SubsProfileDataList.datas.add(
+                                it
+                            )
+                        }
+                        SubsProfileDataList.datas.sortBy { it.date.split("-")[2] }
+                        SubsProfileDataList.datas.apply {
+                            subsProfileAdapter.datas = SubsProfileDataList.datas
+                            subsProfileAdapter.notifyDataSetChanged()
+                        }
+                    } else { // code == 400
+                        Log.d(TAG2, "연결실패")
+                    }
+                }
+
+                override fun onFailure(
+                    call: Call<ResultTransactions>,
+                    t: Throwable
+                ) { // code == 500
+                    // 실패 처리
+                    Log.d(TAG2, "인터넷 네트워크 문제")
+                    Log.d(TAG2, t.toString())
+                }
+            })
+    }
+
+    // 고정지출 추가
+    private fun postSubscriptions(
+        accessToken: String,
+        transaction: Transaction
+    ) {
+        RetrofitBuild.api.postSubscriptions(accessToken, transaction, accountId)
+            .enqueue(object : Callback<ResultId> {
+                @SuppressLint("NotifyDataSetChanged")
+                override fun onResponse(call: Call<ResultId>, response: Response<ResultId>) {
+                    if (response.isSuccessful) { // <--> response.code == 200
+                        Log.d(TAG2, "연결성공")
+                        val responseApi = response.body()
+                        Log.d(TAG2, responseApi.toString())
+                        val transactionModel = TransactionModel(
+                            responseApi!!.id,
+                            transaction.is_consumption,
+                            transaction.price,
+                            transaction.detail,
+                            transaction.date,
+                            transaction.category,
+                            accountId
+                        )
+                        SubsProfileDataList.datas.apply {
+                            add(transactionModel)
+                            subsProfileAdapter.datas = SubsProfileDataList.datas
+                            subsProfileAdapter.datas.sortBy { it.date.split("-")[2] }
+                            subsProfileAdapter.notifyDataSetChanged()
+                        }
+                        Log.d("!!!!!!!!!!!!!!!!!", SubsProfileDataList.datas.toString())
+                    } else { // code == 400
+                        Log.d(TAG2, "연결실패")
+                    }
+                }
+
+                override fun onFailure(call: Call<ResultId>, t: Throwable) { // code == 500
+                    // 실패 처리
+                    Log.d(TAG2, "인터넷 네트워크 문제")
+                    Log.d(TAG2, t.toString())
+                }
+            })
+    }
+
     private fun postRefresh(refreshToken: RefreshToken) {
         RetrofitBuild.api.postRefresh(refreshToken).enqueue(object : Callback<ResultAndToken> {
             override fun onResponse(
@@ -1344,6 +1571,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
             }
         })
     }
+
 
     //-------------------------------------------------------------------------------------
     //                                     Permission

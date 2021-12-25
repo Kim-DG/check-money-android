@@ -36,7 +36,6 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(datas[position])
-
     }
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {

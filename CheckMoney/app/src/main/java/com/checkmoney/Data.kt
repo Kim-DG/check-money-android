@@ -179,6 +179,10 @@ object ProfileDataList{
     var datas: MutableList<ProfileData> = mutableListOf()
 }
 
+object SubsProfileDataList{
+    var datas: MutableList<TransactionModel> = mutableListOf()
+}
+
 object SpinnerArray{
     var sData : ArrayList<String> = arrayListOf()
     var sData2 : ArrayList<String> = arrayListOf()

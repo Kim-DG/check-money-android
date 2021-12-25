@@ -36,7 +36,10 @@
         <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/dialog_choice_profile.xml" value="0.3697916666666667" />
         <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/dialog_datepicker.xml" value="0.3796875" />
         <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/dialog_datepicker_edit.xml" value="0.30104166666666665" />
+        <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/dialog_datepicker_subs.xml" value="0.37447916666666664" />
+        <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/dialog_datepicker_subs_edit.xml" value="0.37447916666666664" />
         <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/dialog_find_pwd.xml" value="0.35260416666666666" />
+        <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/dialog_subscription_list.xml" value="0.37447916666666664" />
         <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/dialog_userinfo_edit.xml" value="0.33" />
         <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/dialog_wallet_create.xml" value="0.317481884057971" />
         <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/dialog_wallet_delete.xml" value="0.40677083333333336" />
@@ -50,6 +53,7 @@
         <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/nav_header_main.xml" value="0.30104166666666665" />
         <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/price_recycler.xml" value="0.32916666666666666" />
         <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/recycler_price.xml" value="0.3697916666666667" />
+        <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/recycler_subscription.xml" value="0.37447916666666664" />
         <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/recycler_wallet.xml" value="0.3697916666666667" />
         <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/spinner_layout.xml" value="0.32395833333333335" />
         <entry key="..\:/androidSdk/check-money-android/CheckMoney/app/src/main/res/layout/wallet_create_dialog.xml" value="0.29010416666666666" />

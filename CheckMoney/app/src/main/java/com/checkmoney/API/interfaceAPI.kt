@@ -67,4 +67,16 @@ interface API{
     @Multipart
     @POST("api/users/img")
     fun postImage(@Header("Authorization") access_token: String, @Part file: MultipartBody.Part): Call<ResultImageUrl>
+
+    @GET("api/accounts/{accountId}/subscriptions")
+    fun getSubscriptions(@Header("Authorization") access_token: String, @Path("accountId") accountId: Int): Call<ResultTransactions>
+
+    @POST("api/accounts/{accountId}/subscriptions")
+    fun postSubscriptions(@Header("Authorization") access_token: String, @Body transaction: Transaction, @Path("accountId") accountId: Int): Call<ResultId>
+
+    @PUT("api/accounts/{accountId}/subscriptions")
+    fun putSubscriptions(@Header("Authorization") access_token: String, @Path("accountId") accountId: Int, @Body transaction: EditTransaction): Call<Result>
+
+    @DELETE ("api/accounts/{accountId}/subscriptions")
+    fun deleteSubscriptions(@Header("Authorization") access_token: String, @Path("accountId") accountId: Int): Call<Result>
 }
