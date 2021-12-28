@@ -58,7 +58,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
     private val type = object : TypeToken<ErrorResult>() {}.type
 
     private lateinit var walletData: ProfileData
-    private lateinit var moneyProfileadapter: MoneyProfileAdapter
+    private lateinit var moneyProfileAdapter: MoneyProfileAdapter
     private lateinit var profileAdapter: ProfileAdapter
     private lateinit var subsProfileAdapter: SubscriptionProfileAdaptor
     private lateinit var moneyRvProfile: RecyclerView
@@ -352,8 +352,8 @@ class WalletActivity : AppCompatActivity(), CalTotal,
                 )) && (it.date.date.year == (ThisTime.cal.get(Calendar.YEAR)
                     .toString())) && (it.is_consumption == 0)
             }).toMutableList()
-            moneyProfileadapter.datas = filterDatas
-            moneyProfileadapter.notifyDataSetChanged()
+            moneyProfileAdapter.datas = filterDatas
+            moneyProfileAdapter.notifyDataSetChanged()
         }
     }
 
@@ -369,8 +369,8 @@ class WalletActivity : AppCompatActivity(), CalTotal,
                 )) && (it.date.date.year == (ThisTime.cal.get(Calendar.YEAR)
                     .toString())) && (it.is_consumption == 1)
             }).toMutableList()
-            moneyProfileadapter.datas = filterDatas
-            moneyProfileadapter.notifyDataSetChanged()
+            moneyProfileAdapter.datas = filterDatas
+            moneyProfileAdapter.notifyDataSetChanged()
         }
     }
 
@@ -539,7 +539,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
             val btn_choice = dlgDate.findViewById<Button>(R.id.btn_choice)
             val btn_cancle = dlgDate.findViewById<Button>(R.id.btn_cancel)
             val spinner = dlgDate.findViewById<Spinner>(R.id.spinner)
-            val spinner2 = dlgDate.findViewById<Spinner>(R.id.spinner2)
+            //val spinner2 = dlgDate.findViewById<Spinner>(R.id.spinner2)
             val text_alarm = dlgDate.findViewById<TextView>(R.id.text_alarm)
 
             val year: NumberPicker = dlgDate.findViewById(R.id.yearpicker_datepicker)
@@ -550,8 +550,10 @@ class WalletActivity : AppCompatActivity(), CalTotal,
             val adapter = ArrayAdapter(this, R.layout.spinner_layout, SpinnerArray.sData)
             spinner.adapter = adapter
 
+            /*
             val adapter2 = ArrayAdapter(this, R.layout.spinner_layout, SpinnerArray.sData2)
             spinner2.adapter = adapter2
+             */
 
             // datepicker의 회전여부
             year.wrapSelectorWheel = false
@@ -569,7 +571,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
             day.maxValue = 31
 
             // 수입, 지출 여부
-            var is_consumtion = 0
+            //var is_consumtion = 0
             // 카테고리 포지션
             var category = 0
 
@@ -601,6 +603,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
                 }
             }
 
+            /*
             spinner2.setSelection(1)
             spinner2.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(
@@ -619,6 +622,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
                     TODO("Not yet implemented")
                 }
             }
+             */
 
             btn_choice.setOnClickListener {
                 if (et_detail.text.toString() == "" || et_price.text.toString() == "") {
@@ -626,7 +630,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
                 } else {
                     // 추가한 내역 서버로 전송
                     val transaction = Transaction(
-                        is_consumption = is_consumtion,
+                        is_consumption = 1,
                         price = et_price.text.toString().toInt(),
                         detail = et_detail.text.toString(),
                         date = "${year.value}-${month.value}-${day.value}",
@@ -702,8 +706,8 @@ class WalletActivity : AppCompatActivity(), CalTotal,
         bearerAccessToken = "Bearer $access_token"
 
         subsProfileAdapter = SubscriptionProfileAdaptor(this, accountId, bearerAccessToken)
-        moneyProfileadapter = MoneyProfileAdapter(this, this, accountId, bearerAccessToken)
-        moneyRvProfile.adapter = moneyProfileadapter
+        moneyProfileAdapter = MoneyProfileAdapter(this, this, accountId, bearerAccessToken)
+        moneyRvProfile.adapter = moneyProfileAdapter
     }
 
     //recycler항목 추가, 전체내역표시
@@ -718,8 +722,8 @@ class WalletActivity : AppCompatActivity(), CalTotal,
                     (ThisTime.cal.get(Calendar.MONTH) + 1)
                 )) && (it.date.date.year == (ThisTime.cal.get(Calendar.YEAR).toString()))
             }.toMutableList()
-            moneyProfileadapter.datas = filterDatas
-            moneyProfileadapter.notifyDataSetChanged()
+            moneyProfileAdapter.datas = filterDatas
+            moneyProfileAdapter.notifyDataSetChanged()
         }
     }
 
@@ -1230,7 +1234,8 @@ class WalletActivity : AppCompatActivity(), CalTotal,
 
     // 내역 받아오기
     private fun getTransaction(accessToken: String) {
-        RetrofitBuild.api.getTransaction(accessToken, accountId)
+        val page = mapOf("page" to 1, "limit" to 1000)
+        RetrofitBuild.api.getTransaction(accessToken, accountId, page)
             .enqueue(object : Callback<ResultTransactions> {
                 override fun onResponse(
                     call: Call<ResultTransactions>,
@@ -1461,7 +1466,8 @@ class WalletActivity : AppCompatActivity(), CalTotal,
 
     // 고정지출 내역 받아오기
     private fun getSubscriptions(accessToken: String) {
-        RetrofitBuild.api.getSubscriptions(accessToken, accountId)
+        val page = mapOf("page" to 1, "limit" to 1000)
+        RetrofitBuild.api.getSubscriptions(accessToken, accountId, page)
             .enqueue(object : Callback<ResultTransactions> {
                 @SuppressLint("NotifyDataSetChanged")
                 override fun onResponse(
@@ -1484,7 +1490,16 @@ class WalletActivity : AppCompatActivity(), CalTotal,
                             subsProfileAdapter.notifyDataSetChanged()
                         }
                     } else { // code == 400
+                        val errorResponse: ErrorResult? =
+                            gson.fromJson(response.errorBody()!!.charStream(), type)
                         Log.d(TAG2, "연결실패")
+                        when (errorResponse!!.code) {
+                            // access토큰 만료
+                            40300 -> {
+                                postRefresh(refreshToken)
+                                getSubscriptions(bearerAccessToken)
+                            }
+                        }
                     }
                 }
 
@@ -1529,7 +1544,16 @@ class WalletActivity : AppCompatActivity(), CalTotal,
                         }
                         Log.d("!!!!!!!!!!!!!!!!!", SubsProfileDataList.datas.toString())
                     } else { // code == 400
+                        val errorResponse: ErrorResult? =
+                            gson.fromJson(response.errorBody()!!.charStream(), type)
                         Log.d(TAG2, "연결실패")
+                        when (errorResponse!!.code) {
+                            // access토큰 만료
+                            40300 -> {
+                                postRefresh(refreshToken)
+                                postSubscriptions(bearerAccessToken, transaction)
+                            }
+                        }
                     }
                 }
 

@@ -776,8 +776,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     //-----------------------------------------------------------------------
 
     private fun getAccount(accessToken: String) {
-        val page = mapOf("page" to "1", "limit" to "5")
-        RetrofitBuild.api.getAccount(accessToken ).enqueue(object : Callback<ResultAccountList> {
+        val page = mapOf("page" to 1, "limit" to 1000)
+        RetrofitBuild.api.getAccount(accessToken, page).enqueue(object : Callback<ResultAccountList> {
             override fun onResponse(call: Call<ResultAccountList>, response: Response<ResultAccountList>) {
                 if(response.isSuccessful) { // <--> response.code == 200
                     Log.d(TAG2, "연결성공")
@@ -981,7 +981,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun getAllTransAction(accessToken: String){
-        RetrofitBuild.api.getAllTransaction(accessToken).enqueue(object : Callback<ResultTransactions> {
+        val page = mapOf("page" to 1, "limit" to 1000)
+        RetrofitBuild.api.getAllTransaction(accessToken, page).enqueue(object : Callback<ResultTransactions> {
             override fun onResponse(call: Call<ResultTransactions>, response: Response<ResultTransactions>) {
                 if(response.isSuccessful) { // <--> response.code == 200
                     Log.d(TAG2, "연결성공")

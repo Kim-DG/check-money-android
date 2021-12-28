@@ -31,7 +31,7 @@ interface API{
     fun postFindPwd(@Body emailPwd: EmailPwd): Call<Result>
 
     @GET("api/accounts")
-    fun getAccount(@Header("Authorization") access_token: String): Call<ResultAccountList>
+    fun getAccount(@Header("Authorization") access_token: String, @QueryMap page: Map<String, Int>): Call<ResultAccountList>
     //@QueryMap page: Map<String, String>
 
     @POST("api/accounts")
@@ -44,10 +44,10 @@ interface API{
     fun deleteAccount(@Header("Authorization") access_token: String, @Path("accountId") accountId: Int): Call<Result>
 
     @GET("api/accounts/{accountId}/transactions")
-    fun getTransaction(@Header("Authorization") access_token: String, @Path("accountId") accountId: Int): Call<ResultTransactions>
+    fun getTransaction(@Header("Authorization") access_token: String, @Path("accountId") accountId: Int, @QueryMap page: Map<String, Int>): Call<ResultTransactions>
 
     @GET("api/transactions")
-    fun getAllTransaction(@Header("Authorization") access_token: String): Call<ResultTransactions>
+    fun getAllTransaction(@Header("Authorization") access_token: String, @QueryMap page: Map<String, Int>): Call<ResultTransactions>
 
     @POST("api/transactions")
     fun postTransaction(@Header("Authorization") access_token: String, @Body transaction: Transaction): Call<ResultId>
@@ -69,14 +69,14 @@ interface API{
     fun postImage(@Header("Authorization") access_token: String, @Part file: MultipartBody.Part): Call<ResultImageUrl>
 
     @GET("api/accounts/{accountId}/subscriptions")
-    fun getSubscriptions(@Header("Authorization") access_token: String, @Path("accountId") accountId: Int): Call<ResultTransactions>
+    fun getSubscriptions(@Header("Authorization") access_token: String, @Path("accountId") accountId: Int, @QueryMap page: Map<String, Int>): Call<ResultTransactions>
 
     @POST("api/accounts/{accountId}/subscriptions")
     fun postSubscriptions(@Header("Authorization") access_token: String, @Body transaction: Transaction, @Path("accountId") accountId: Int): Call<ResultId>
 
-    @PUT("api/accounts/{accountId}/subscriptions")
-    fun putSubscriptions(@Header("Authorization") access_token: String, @Path("accountId") accountId: Int, @Body transaction: EditTransaction): Call<Result>
+    @PUT("api/accounts/{accountId}/subscriptions/{subscriptionId}")
+    fun putSubscriptions(@Header("Authorization") access_token: String, @Path("accountId") accountId: Int, @Path("subscriptionId") subscriptionId: Int, @Body subscription: EditTransaction): Call<Result>
 
-    @DELETE ("api/accounts/{accountId}/subscriptions")
-    fun deleteSubscriptions(@Header("Authorization") access_token: String, @Path("accountId") accountId: Int): Call<Result>
+    @DELETE ("api/accounts/{accountId}/subscriptions/{subscriptionId}")
+    fun deleteSubscriptions(@Header("Authorization") access_token: String, @Path("accountId") accountId: Int, @Path("subscriptionId") subscriptionId: Int): Call<Result>
 }

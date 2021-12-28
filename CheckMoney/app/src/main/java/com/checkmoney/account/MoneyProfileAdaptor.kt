@@ -21,13 +21,18 @@ import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-class MoneyProfileAdapter(private val context: Context, private val calTotal: CalTotal, private val accountId: Int, private val accessToken: String) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class MoneyProfileAdapter(
+    private val context: Context,
+    private val calTotal: CalTotal,
+    private val accountId: Int,
+    private val accessToken: String
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     var datas = mutableListOf<MoneyProfileData>()
     val TAG2 = "MoneyProfileAdapter_API"
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view: View?
-        return when (viewType){
+        return when (viewType) {
             MoneyProfileData.PRICE_TYPE -> {
                 view = LayoutInflater.from(context).inflate(R.layout.recycler_price, parent, false)
                 PriceViewHolder(view)
@@ -58,6 +63,7 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
     inner class DateViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
         private val text_date: TextView = itemView.findViewById(R.id.text_date)
+
         @SuppressLint("SetTextI18n")
         fun bind(item: MoneyProfileData) {
             text_date.text = item.date.date.month + "/" + item.date.date.day
@@ -77,21 +83,24 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
             if (item.is_consumption == 0) {
                 price = "+" + format.format(item.price) + " 원"
                 text_price.setTextColor(
-                    ContextCompat.getColor(context,
-                    R.color.logoBlue
-                ))
-            }
-            else if(item.is_consumption == 1){
+                    ContextCompat.getColor(
+                        context,
+                        R.color.logoBlue
+                    )
+                )
+            } else if (item.is_consumption == 1) {
                 price = "-" + format.format(item.price) + " 원"
                 text_price.setTextColor(
-                    ContextCompat.getColor(context,
+                    ContextCompat.getColor(
+                        context,
                         R.color.red
-                    ))
+                    )
+                )
             }
 
             text_detail.text = item.detail
             text_price.text = price
-            if(item.is_consumption == 1)
+            if (item.is_consumption == 1)
                 text_category.text = category.category[item.category]
             else
                 text_category.text = "수입"
@@ -112,9 +121,9 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
                 val spinner2 = dlg.findViewById<Spinner>(R.id.spinner2)
                 val text_alarm = dlg.findViewById<TextView>(R.id.text_alarm)
 
-                val year : NumberPicker = dlg.findViewById(R.id.yearpicker_datepicker)
-                val month : NumberPicker = dlg.findViewById(R.id.monthpicker_datepicker)
-                val day : NumberPicker = dlg.findViewById(R.id.daypicker_datepicker)
+                val year: NumberPicker = dlg.findViewById(R.id.yearpicker_datepicker)
+                val month: NumberPicker = dlg.findViewById(R.id.monthpicker_datepicker)
+                val day: NumberPicker = dlg.findViewById(R.id.daypicker_datepicker)
 
                 val adapter = ArrayAdapter(context, R.layout.spinner_layout, SpinnerArray.sData)
                 spinner.adapter = adapter
@@ -143,23 +152,23 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
                 var is_consumtion = 0
                 var category = 0
 
-                val c = System.currentTimeMillis()
-                val a = Date(c)
+                val longTime = System.currentTimeMillis()
+                val dateTime = Date(longTime)
 
                 val yf = SimpleDateFormat("yyyy")
                 val mf = SimpleDateFormat("MM")
                 val qf = SimpleDateFormat("dd")
 
-                val strYear = yf.format(a)
-                val strMonth = mf.format(a)
-                val strDay = qf.format(a)
+                val strYear = yf.format(dateTime)
+                val strMonth = mf.format(dateTime)
+                val strDay = qf.format(dateTime)
 
                 year.value = strYear.toInt()
                 month.value = strMonth.toInt()
                 day.value = strDay.toInt()
 
                 spinner.setSelection(0)
-                spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
+                spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                     override fun onItemSelected(
                         parent: AdapterView<*>?,
                         view: View?,
@@ -175,17 +184,16 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
                 }
 
                 spinner2.setSelection(1)
-                spinner2.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
+                spinner2.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                     override fun onItemSelected(
                         parent: AdapterView<*>?,
                         view: View?,
                         position: Int,
                         id: Long
                     ) {
-                        if(SpinnerArray.sData2[position] == "지출"){
+                        if (SpinnerArray.sData2[position] == "지출") {
                             is_consumtion = 1
-                        }
-                        else
+                        } else
                             is_consumtion = 0
                     }
 
@@ -194,25 +202,30 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
                     }
                 }
                 btn_edit.setOnClickListener {
-                    if(et_detail.text.toString() == "" || et_price.text.toString() == ""){
+                    if (et_detail.text.toString() == "" || et_price.text.toString() == "") {
                         text_alarm.text = "사용내역과 금액을 입력해 주세요."
-                    }
-                    else {
+                    } else {
                         val dod = datas[adapterPosition]
                         MoneyProfileDataList.datas.remove(datas[adapterPosition])
 
                         //동일한 날짜의 내역이 없으면 날짜 삭제
-                        if(!MoneyProfileDataList.datas.any{it.date.type == 0 && it.date.date.year == dod.date.date.year && it.date.date.month == dod.date.date.month && it.date.date.day == dod.date.date.day && it.is_consumption == dod.is_consumption}) {
+                        if (!MoneyProfileDataList.datas.any { it.date.type == 0 && it.date.date.year == dod.date.date.year && it.date.date.month == dod.date.date.month && it.date.date.day == dod.date.date.day && it.is_consumption == dod.is_consumption }) {
                             val data = MoneyProfileData(
-                                is_consumption = dod.is_consumption, price = 0, detail = "", date = DateType(
+                                is_consumption = dod.is_consumption,
+                                price = 0,
+                                detail = "",
+                                date = DateType(
                                     id = -1, MoneyProfileData.DATE_TYPE,
-                                    Date(datas[adapterPosition].date.date.year,
-                                    datas[adapterPosition].date.date.month,
-                                    datas[adapterPosition].date.date.day,
+                                    Date(
+                                        datas[adapterPosition].date.date.year,
+                                        datas[adapterPosition].date.date.month,
+                                        datas[adapterPosition].date.date.day,
                                     )
-                                ),category = 0,account_id = accountId
+                                ),
+                                category = 0,
+                                account_id = accountId
                             )
-                            if(MoneyProfileDataList.datas.any{it == data}) {
+                            if (MoneyProfileDataList.datas.any { it == data }) {
                                 MoneyProfileDataList.datas.remove(data)
                             }
                         }
@@ -220,56 +233,90 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
                         MoneyProfileDataList.datas.apply {
                             add(
                                 MoneyProfileData(
-                                    is_consumption = is_consumtion, price = 0, detail = "", date = DateType(
+                                    is_consumption = is_consumtion,
+                                    price = 0,
+                                    detail = "",
+                                    date = DateType(
                                         id = -1, MoneyProfileData.DATE_TYPE,
-                                        Date(String.format("%02d", year.value),
-                                        String.format("%02d", month.value),
-                                        String.format("%02d", day.value))
-                                    ), category = 0, account_id = accountId
+                                        Date(
+                                            String.format("%02d", year.value),
+                                            String.format("%02d", month.value),
+                                            String.format("%02d", day.value)
+                                        )
+                                    ),
+                                    category = 0,
+                                    account_id = accountId
                                 )
                             )
                             add(
                                 MoneyProfileData(
-                                    is_consumption = is_consumtion, price = et_price.text.toString().toInt(),
-                                    detail = et_detail.text.toString(), date = DateType(
+                                    is_consumption = is_consumtion,
+                                    price = et_price.text.toString().toInt(),
+                                    detail = et_detail.text.toString(),
+                                    date = DateType(
                                         id = item.date.id, MoneyProfileData.PRICE_TYPE,
-                                        Date(String.format("%02d", year.value),
-                                        String.format("%02d", month.value),
-                                        String.format("%02d", day.value))
-                                    ), category = category, account_id = accountId
+                                        Date(
+                                            String.format("%02d", year.value),
+                                            String.format("%02d", month.value),
+                                            String.format("%02d", day.value)
+                                        )
+                                    ),
+                                    category = category,
+                                    account_id = accountId
                                 )
                             )
-                            putTransaction(accessToken,item, EditTransaction(is_consumption = is_consumtion, price = et_price.text.toString().toInt(),
-                                detail = et_detail.text.toString(), date = "${year.value}-${month.value}-${day.value}",category = category))
-                            calTotal.calTotal(item.is_consumption,item.price,is_consumtion,et_price.text.toString().toInt())
+                            putTransaction(
+                                accessToken, item, EditTransaction(
+                                    is_consumption = is_consumtion,
+                                    price = et_price.text.toString().toInt(),
+                                    detail = et_detail.text.toString(),
+                                    date = "${year.value}-${month.value}-${day.value}",
+                                    category = category
+                                )
+                            )
+                            calTotal.calTotal(
+                                item.is_consumption,
+                                item.price,
+                                is_consumtion,
+                                et_price.text.toString().toInt()
+                            )
                         }
 
-                        MoneyProfileDataList.datas = MoneyProfileDataList.datas.distinct().toMutableList()
+                        MoneyProfileDataList.datas =
+                            MoneyProfileDataList.datas.distinct().toMutableList()
                         MoneyProfileDataList.datas.sortWith(compareByDescending<MoneyProfileData> { it.date.date.year }.thenByDescending { it.date.date.month }
-                            .thenByDescending { it.date.date.day }.thenByDescending { it.date.type })
-                        if(ListType.listype == ListType.TOTAL) {
+                            .thenByDescending { it.date.date.day }
+                            .thenByDescending { it.date.type })
+                        if (ListType.listype == ListType.TOTAL) {
                             val total_datas_list =
                                 MoneyProfileDataList.datas.distinctBy { MoneyProfileData -> MoneyProfileData.date }
                             val filterDatas = total_datas_list.filter {
-                                (it.date.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.date.year == (ThisTime.cal.get(
+                                (it.date.date.month == String.format(
+                                    "%02d",
+                                    (ThisTime.cal.get(Calendar.MONTH) + 1)
+                                )) && (it.date.date.year == (ThisTime.cal.get(
                                     Calendar.YEAR
                                 ).toString()))
                             }.toMutableList()
                             this@MoneyProfileAdapter.datas = filterDatas
                             this@MoneyProfileAdapter.notifyDataSetChanged()
-                        }
-                        else if(ListType.listype == ListType.EXPENSE) {
+                        } else if (ListType.listype == ListType.EXPENSE) {
                             val filterDatas = (MoneyProfileDataList.datas.filter {
-                                (it.date.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.date.year == (ThisTime.cal.get(
+                                (it.date.date.month == String.format(
+                                    "%02d",
+                                    (ThisTime.cal.get(Calendar.MONTH) + 1)
+                                )) && (it.date.date.year == (ThisTime.cal.get(
                                     Calendar.YEAR
                                 ).toString())) && (it.is_consumption == 1)
                             }).toMutableList()
                             this@MoneyProfileAdapter.datas = filterDatas
                             this@MoneyProfileAdapter.notifyDataSetChanged()
-                        }
-                        else {
+                        } else {
                             val filterDatas = (MoneyProfileDataList.datas.filter {
-                                (it.date.date.month == String.format("%02d",(ThisTime.cal.get(Calendar.MONTH)+1))) && (it.date.date.year == (ThisTime.cal.get(
+                                (it.date.date.month == String.format(
+                                    "%02d",
+                                    (ThisTime.cal.get(Calendar.MONTH) + 1)
+                                )) && (it.date.date.year == (ThisTime.cal.get(
                                     Calendar.YEAR
                                 ).toString())) && (it.is_consumption == 0)
                             }).toMutableList()
@@ -282,36 +329,45 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
                     }
                 }
                 btn_delete.setOnClickListener {
-                    val deletedlg = Dialog(context)
-                    deletedlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
-                    deletedlg.setContentView(R.layout.dialog_wallet_delete)     //다이얼로그에 사용할 xml 파일을 불러옴
-                    deletedlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                    deletedlg.show()
+                    val deleteDlg = Dialog(context)
+                    deleteDlg.requestWindowFeature(Window.FEATURE_NO_TITLE)   //타이틀바 제거
+                    deleteDlg.setContentView(R.layout.dialog_wallet_delete)     //다이얼로그에 사용할 xml 파일을 불러옴
+                    deleteDlg.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                    deleteDlg.show()
 
-                    val btn_delete_confirm = deletedlg.findViewById<Button>(R.id.btn_delete)
-                    val btn_delete_cancle = deletedlg.findViewById<Button>(R.id.btn_cancel)
+                    val btnDeleteConfirm = deleteDlg.findViewById<Button>(R.id.btn_delete)
+                    val btnDeleteCancle = deleteDlg.findViewById<Button>(R.id.btn_cancel)
 
-                    btn_delete_confirm.setOnClickListener {
-                        deleteTransaction(accessToken,item)
+                    btnDeleteConfirm.setOnClickListener {
+                        deleteTransaction(accessToken, item)
                         val dod = datas[adapterPosition]
                         MoneyProfileDataList.datas.remove(datas[adapterPosition])
 
-                        if(!MoneyProfileDataList.datas.any{it.date.type == 0 && it.date.date.year == dod.date.date.year && it.date.date.month == dod.date.date.month && it.date.date.day == dod.date.date.day && it.is_consumption == dod.is_consumption}) {
+                        //삭제 했을 때 내역이 없는 날짜가 남아 있을 경우 해당 날짜 삭제
+                        if (!MoneyProfileDataList.datas.any { it.date.type == 0 && it.date.date.year == dod.date.date.year && it.date.date.month == dod.date.date.month && it.date.date.day == dod.date.date.day && it.is_consumption == dod.is_consumption }) {
                             val data = MoneyProfileData(
-                                is_consumption = dod.is_consumption, price = 0, detail = "",date = DateType(
+                                is_consumption = dod.is_consumption,
+                                price = 0,
+                                detail = "",
+                                date = DateType(
                                     id = -1, MoneyProfileData.DATE_TYPE,
-                                    Date(datas[adapterPosition].date.date.year,
+                                    Date(
+                                        datas[adapterPosition].date.date.year,
                                         datas[adapterPosition].date.date.month,
-                                        datas[adapterPosition].date.date.day)
-                                ), category = 0, account_id = accountId
+                                        datas[adapterPosition].date.date.day
+                                    )
+                                ),
+                                category = 0,
+                                account_id = accountId
                             )
-                            if(MoneyProfileDataList.datas.any{it == data}) {
+                            if (MoneyProfileDataList.datas.any { it == data }) {
                                 MoneyProfileDataList.datas.remove(data)
                             }
                         }
-                        calTotal.calTotal(item.is_consumption,item.price,0,0)
+                        calTotal.calTotal(item.is_consumption, item.price, 0, 0)
                         val cal = Calendar.getInstance()
-                        if(ListType.listype == ListType.TOTAL) {
+                        //현재 클릭 해놓은 상태(총합, 지출, 수입)에 따라 필터를 미리처리
+                        if (ListType.listype == ListType.TOTAL) {
                             val total_datas_list =
                                 MoneyProfileDataList.datas.distinctBy { MoneyProfileData -> MoneyProfileData.date }
                             val filterDatas = total_datas_list.filter {
@@ -322,8 +378,7 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
                             }.toMutableList()
                             this@MoneyProfileAdapter.datas = filterDatas
                             this@MoneyProfileAdapter.notifyDataSetChanged()
-                        }
-                        else if(ListType.listype == ListType.EXPENSE) {
+                        } else if (ListType.listype == ListType.EXPENSE) {
                             val filterDatas = (MoneyProfileDataList.datas.filter {
                                 (it.date.date.month == (cal.get(Calendar.MONTH) + 1).toString()) && (it.date.date.year == (cal.get(
                                     Calendar.YEAR
@@ -331,8 +386,7 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
                             }).toMutableList()
                             this@MoneyProfileAdapter.datas = filterDatas
                             this@MoneyProfileAdapter.notifyDataSetChanged()
-                        }
-                        else {
+                        } else {
                             val filterDatas = (MoneyProfileDataList.datas.filter {
                                 (it.date.date.month == (cal.get(Calendar.MONTH) + 1).toString()) && (it.date.date.year == (cal.get(
                                     Calendar.YEAR
@@ -341,11 +395,11 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
                             this@MoneyProfileAdapter.datas = filterDatas
                             this@MoneyProfileAdapter.notifyDataSetChanged()
                         }
-                        deletedlg.dismiss()
+                        deleteDlg.dismiss()
                         dlg.dismiss()
                     }
-                    btn_delete_cancle.setOnClickListener {
-                        deletedlg.dismiss()
+                    btnDeleteCancle.setOnClickListener {
+                        deleteDlg.dismiss()
                     }
                 }
 
@@ -361,19 +415,24 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
     //                            Rest Api function
     //-----------------------------------------------------------------------
     // 내역 수정
-    private fun putTransaction(accessToken: String, item: MoneyProfileData, transaction: EditTransaction) {
+    private fun putTransaction(
+        accessToken: String,
+        item: MoneyProfileData,
+        transaction: EditTransaction
+    ) {
         RetrofitBuild.api.putTransaction(accessToken, item.date.id, transaction).enqueue(object :
             Callback<Result> {
             @SuppressLint("NotifyDataSetChanged")
             override fun onResponse(call: Call<Result>, response: Response<Result>) {
-                if(response.isSuccessful) { // <--> response.code == 200
+                if (response.isSuccessful) { // <--> response.code == 200
                     Log.d(TAG2, "연결성공")
                     val responseApi = response.body()
-                    Log.d(TAG2,responseApi.toString())
+                    Log.d(TAG2, responseApi.toString())
                 } else { // code == 400
                     Log.d(TAG2, "연결실패")
                 }
             }
+
             override fun onFailure(call: Call<Result>, t: Throwable) { // code == 500
                 // 실패 처리
                 Log.d(TAG2, "인터넷 네트워크 문제")
@@ -384,22 +443,24 @@ class MoneyProfileAdapter(private val context: Context, private val calTotal: Ca
 
     // 내역 삭제
     private fun deleteTransaction(accessToken: String, item: MoneyProfileData) {
-        RetrofitBuild.api.deleteTransaction(accessToken, item.date.id).enqueue(object : Callback<Result> {
-            @SuppressLint("NotifyDataSetChanged")
-            override fun onResponse(call: Call<Result>, response: Response<Result>) {
-                if(response.isSuccessful) { // <--> response.code == 200
-                    Log.d(TAG2, "연결성공")
-                    val responseApi = response.body()
-                    Log.d(TAG2,responseApi.toString())
-                } else { // code == 400
-                    Log.d(TAG2, "연결실패")
+        RetrofitBuild.api.deleteTransaction(accessToken, item.date.id)
+            .enqueue(object : Callback<Result> {
+                @SuppressLint("NotifyDataSetChanged")
+                override fun onResponse(call: Call<Result>, response: Response<Result>) {
+                    if (response.isSuccessful) { // <--> response.code == 200
+                        Log.d(TAG2, "연결성공")
+                        val responseApi = response.body()
+                        Log.d(TAG2, responseApi.toString())
+                    } else { // code == 400
+                        Log.d(TAG2, "연결실패")
+                    }
                 }
-            }
-            override fun onFailure(call: Call<Result>, t: Throwable) { // code == 500
-                // 실패 처리
-                Log.d(TAG2, "인터넷 네트워크 문제")
-                Log.d(TAG2, t.toString())
-            }
-        })
+
+                override fun onFailure(call: Call<Result>, t: Throwable) { // code == 500
+                    // 실패 처리
+                    Log.d(TAG2, "인터넷 네트워크 문제")
+                    Log.d(TAG2, t.toString())
+                }
+            })
     }
 }

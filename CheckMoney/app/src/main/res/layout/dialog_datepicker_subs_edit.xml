@@ -118,14 +118,6 @@
                 android:textAlignment="textStart"
                 android:textColor="@color/black"
                 android:textColorHint="#D3D3D3" />
-
-            <Spinner
-                android:id="@+id/spinner2"
-                android:layout_width="100dp"
-                android:layout_height="match_parent"
-                android:layout_margin="10dp"
-                android:background="@color/white"
-                tools:ignore="SpeakableTextPresentCheck" />
         </LinearLayout>
 
         <LinearLayout
