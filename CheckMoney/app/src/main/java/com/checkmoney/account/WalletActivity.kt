@@ -691,10 +691,11 @@ class WalletActivity : AppCompatActivity(), CalTotal,
 
     //token과 유저정보 가져옴, 그 외 세팅
     private fun initSetting() {
+        Log.d("!!","!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        ThisTime.cal.time = Date()
         textYm.text = df.format(ThisTime.cal.time)
         walletData = intent.getParcelableExtra("data")!!
         textWname.text = walletData.title
-        ThisTime.cal.time = Date()
         naviView.setNavigationItemSelectedListener(this)// 네비게이션 메뉴 아이템에 클릭 속성 부여
 
         SpinnerArray.sData = category.category
@@ -877,7 +878,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
             img_profile_dlg.setImageResource(R.drawable.profile)
         } else {
             val url =
-                "http://ec2-3-38-105-161.ap-northeast-2.compute.amazonaws.com:3001/api$userProfile"
+                "https://checkmoneyproject.azurewebsites.net/api$userProfile"
             Glide.with(this@WalletActivity).load(url).into(img_profile_dlg)
         }
 
@@ -1360,7 +1361,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
                         imgProfile.setImageResource(R.drawable.profile)
                     } else {
                         val url =
-                            "http://ec2-3-38-105-161.ap-northeast-2.compute.amazonaws.com:3001/api" + userProfile
+                            "https://checkmoneyproject.azurewebsites.net/api" + userProfile
                         Glide.with(this@WalletActivity).load(url).into(imgProfile)
                     }
 

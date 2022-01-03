@@ -105,7 +105,10 @@ class TabFragmentMonth : Fragment() {
 
         filterTransaction = allTransaction.filter {
             it.date.split("-")[0] == cal.get(Calendar.YEAR).toString() &&
-                    it.date.split("-")[1] == (cal.get(Calendar.MONTH) + 1).toString() &&
+                    it.date.split("-")[1] == String.format(
+                "%02d",
+                (cal.get(Calendar.MONTH) + 1)
+            ) &&
                     it.is_consumption == 1
         }.toMutableList()
 

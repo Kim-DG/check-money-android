@@ -161,7 +161,7 @@
                     android:fontFamily="@font/spoqahansansneo_regular"
                     android:gravity="end"
                     android:padding="10dp"
-                    android:text="12월 총액"
+                    android:text="1월 총액"
                     android:textColor="@color/logopurple"
                     android:textSize="15sp"
                     app:layout_constraintBottom_toBottomOf="parent"

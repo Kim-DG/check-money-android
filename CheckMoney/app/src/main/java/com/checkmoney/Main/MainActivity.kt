@@ -459,7 +459,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
         else{
             val url =
-                "http://ec2-3-38-105-161.ap-northeast-2.compute.amazonaws.com:3001/api$userProfile"
+                "https://checkmoneyproject.azurewebsites.net/api$userProfile"
             Glide.with(this@MainActivity).load(url).into(img_profile_dlg)
         }
 
@@ -858,7 +858,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         img_profile.setImageResource(R.drawable.profile)
                     }
                     else{
-                        val url = "http://ec2-3-38-105-161.ap-northeast-2.compute.amazonaws.com:3001/api" + userProfile
+                        val url = "https://checkmoneyproject.azurewebsites.net/api" + userProfile
                         Glide.with(this@MainActivity).load(url).into(img_profile)
                     }
 
