@@ -23,11 +23,11 @@ import java.util.Date
 class SubscriptionProfileAdaptor(
     private val context: Context,
     private val accountId: Int,
-    private val accessToken: String,
 ) : RecyclerView.Adapter<SubscriptionProfileAdaptor.ViewHolder>() {
 
     val TAG = "SubscriptionProfileAdapter"
     val TAG2 = "SubscriptionProfileAdapter_API"
+    val bearerAccessToken = "Bearer ${tokens.access_token}"
     var datas = mutableListOf<TransactionModel>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -184,7 +184,7 @@ class SubscriptionProfileAdaptor(
                     if (et_detail.text.toString() == "" || et_price.text.toString() == "") {
                         text_alarm.text = "사용내역과 금액을 입력해 주세요."
                     } else {
-                        putSubscriptions(accessToken,item,EditTransaction(
+                        putSubscriptions(bearerAccessToken,item,EditTransaction(
                             is_consumption = 1,
                             price = et_price.text.toString().toInt(),
                             detail = et_detail.text.toString(),
@@ -210,7 +210,7 @@ class SubscriptionProfileAdaptor(
                     val btnDeleteCancel = deleteDlg.findViewById<Button>(R.id.btn_cancel)
 
                     btnDeleteConfirm.setOnClickListener {
-                        deleteSubscriptions(accessToken,item)
+                        deleteSubscriptions(bearerAccessToken,item)
                         SubsProfileDataList.datas.remove(datas[adapterPosition])
                         this@SubscriptionProfileAdaptor.notifyDataSetChanged()
                         deleteDlg.dismiss()

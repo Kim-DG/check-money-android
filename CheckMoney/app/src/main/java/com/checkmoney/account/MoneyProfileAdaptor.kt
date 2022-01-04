@@ -25,11 +25,11 @@ class MoneyProfileAdapter(
     private val context: Context,
     private val calTotal: CalTotal,
     private val accountId: Int,
-    private val accessToken: String
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     var datas = mutableListOf<MoneyProfileData>()
     val TAG2 = "MoneyProfileAdapter_API"
+    val bearerAccessToken = "Bearer ${tokens.access_token}"
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view: View?
         return when (viewType) {
@@ -266,7 +266,7 @@ class MoneyProfileAdapter(
                                 )
                             )
                             putTransaction(
-                                accessToken, item, EditTransaction(
+                                bearerAccessToken, item, EditTransaction(
                                     is_consumption = is_consumtion,
                                     price = et_price.text.toString().toInt(),
                                     detail = et_detail.text.toString(),
@@ -339,7 +339,7 @@ class MoneyProfileAdapter(
                     val btnDeleteCancle = deleteDlg.findViewById<Button>(R.id.btn_cancel)
 
                     btnDeleteConfirm.setOnClickListener {
-                        deleteTransaction(accessToken, item)
+                        deleteTransaction(bearerAccessToken, item)
                         val dod = datas[adapterPosition]
                         MoneyProfileDataList.datas.remove(datas[adapterPosition])
 

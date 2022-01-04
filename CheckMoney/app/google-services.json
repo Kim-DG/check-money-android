@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "500159069581",
+    "project_id": "checkmooney",
+    "storage_bucket": "checkmooney.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:500159069581:android:4193246c56efc3a12951c4",
+        "android_client_info": {
+          "package_name": "com.checkmoney"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "500159069581-7d19vpkau0v5sb7lc88uuhhm1m9iubu3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.checkmoney",
+            "certificate_hash": "766a5467cd38f52cafed30f769c46150a612363b"
+          }
+        },
+        {
+          "client_id": "500159069581-lef5l1kdpb33orr5bgpa2rtqnfk69kir.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFU-0xQgU66Tj1necDrlEUn7uTRHU-Wac"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "500159069581-810opfj9m5d2lapvosrcdg1naqrui5pu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "500159069581-el3csr571ui6mi1jugnqhicvfv61u17g.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.seunggom.checkmoney"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

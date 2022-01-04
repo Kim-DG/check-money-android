@@ -100,8 +100,6 @@ class WalletActivity : AppCompatActivity(), CalTotal,
     private lateinit var body: MultipartBody.Part
 
     private lateinit var googleSignInClient: GoogleSignInClient
-    private lateinit var access_token: String
-    private lateinit var refresh_token: String
     private lateinit var bearerAccessToken: String
 
     private var editOldPassword = ""
@@ -126,7 +124,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
     @SuppressLint("SimpleDateFormat")
     private val qf = SimpleDateFormat("dd")
 
-    private var refreshToken = RefreshToken(refresh_token = "")
+    private var refreshToken = RefreshToken(tokens.refresh_token, tokens.push_token)
     private var totalPrice: Long = 0
     private var accountId = -1
     private val REQUEST_OPEN_GALLERY: Int = 1
@@ -701,13 +699,11 @@ class WalletActivity : AppCompatActivity(), CalTotal,
         SpinnerArray.sData = category.category
         SpinnerArray.sData2 = consumption.consumption
 
-        access_token = intent.getStringExtra("access_token")!!
-        refresh_token = intent.getStringExtra("refresh_token")!!
         accountId = intent.getIntExtra("accountId", -1)
-        bearerAccessToken = "Bearer $access_token"
+        bearerAccessToken = "Bearer ${tokens.access_token}"
 
-        subsProfileAdapter = SubscriptionProfileAdaptor(this, accountId, bearerAccessToken)
-        moneyProfileAdapter = MoneyProfileAdapter(this, this, accountId, bearerAccessToken)
+        subsProfileAdapter = SubscriptionProfileAdaptor(this, accountId)
+        moneyProfileAdapter = MoneyProfileAdapter(this, this, accountId)
         moneyRvProfile.adapter = moneyProfileAdapter
     }
 
@@ -731,7 +727,7 @@ class WalletActivity : AppCompatActivity(), CalTotal,
     //통장목록표시
     @SuppressLint("NotifyDataSetChanged")
     private fun menuRecycler() {
-        profileAdapter = ProfileAdapter(this, access_token, refresh_token, accountId, layoutDrawer)
+        profileAdapter = ProfileAdapter(this, accountId, layoutDrawer)
         rvProfile.adapter = profileAdapter
 
         ProfileDataList.datas.apply {
@@ -1557,7 +1553,6 @@ class WalletActivity : AppCompatActivity(), CalTotal,
                         }
                     }
                 }
-
                 override fun onFailure(call: Call<ResultId>, t: Throwable) { // code == 500
                     // 실패 처리
                     Log.d(TAG2, "인터넷 네트워크 문제")
@@ -1576,8 +1571,9 @@ class WalletActivity : AppCompatActivity(), CalTotal,
                     Log.d(TAG2, "연결성공")
                     val responseApi = response.body()
                     Log.d(TAG2, responseApi.toString())
-                    access_token = responseApi!!.access_token!!
-                    bearerAccessToken = "Bearer $access_token"
+                    tokens.refresh_token = responseApi!!.refresh_token!!
+                    tokens.access_token = responseApi.access_token!!
+                    bearerAccessToken = "Bearer ${tokens.access_token}"
                 } else { // code == 400
                     Log.d(TAG2, "연결실패")
                     //refresh토큰 만료시 로그아웃

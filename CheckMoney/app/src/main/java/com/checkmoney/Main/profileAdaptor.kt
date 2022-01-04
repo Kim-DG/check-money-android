@@ -20,11 +20,11 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class ProfileAdapter(private val context: Context, private val access_token: String, private val refresh_token: String, private val accountId: Int,private  val layout: DrawerLayout) : RecyclerView.Adapter<ProfileAdapter.ViewHolder>() {
+class ProfileAdapter(private val context: Context, private val accountId: Int,private  val layout: DrawerLayout) : RecyclerView.Adapter<ProfileAdapter.ViewHolder>() {
 
     val TAG = "ProfileAdapter"
     val TAG2 = "ProfileAdapter_API"
-    val bearerAccessToken = "Bearer $access_token"
+    val bearerAccessToken = "Bearer ${tokens.access_token}"
     var datas = mutableListOf<ProfileData>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -55,8 +55,6 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
                     layout.closeDrawers()
                     MoneyProfileDataList.datas.clear()
                     putExtra("data",item)
-                    putExtra("access_token",access_token)
-                    putExtra("refresh_token",refresh_token)
                     putExtra("accountId",item.id)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }.run { context.startActivity(this) }
@@ -67,8 +65,6 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
                     layout.closeDrawers()
                     MoneyProfileDataList.datas.clear()
                     putExtra("data",item)
-                    putExtra("access_token",access_token)
-                    putExtra("refresh_token",refresh_token)
                     putExtra("accountId",item.id)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }.run { context.startActivity(this) }
@@ -119,8 +115,6 @@ class ProfileAdapter(private val context: Context, private val access_token: Str
                     if(accountId == item.id){
                         Intent(context, MainActivity::class.java).apply {
                             MoneyProfileDataList.datas.clear()
-                            putExtra("access_token",access_token)
-                            putExtra("refresh_token",refresh_token)
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }.run { context.startActivity(this) }
                     }

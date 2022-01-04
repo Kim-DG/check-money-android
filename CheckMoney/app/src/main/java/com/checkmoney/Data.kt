@@ -14,7 +14,8 @@ data class Email(
 )
 //request-postGoogle 구글로그인
 data class IdToken(
-    var id_token: String?
+    var id_token: String?,
+    val push_token: String
 )
 data class AuthConfirm(
     var auth_num: String,
@@ -29,11 +30,13 @@ data class Join(
 
 data class UserInfo(
     val email: String,
-    val password: String
+    val password: String,
+    val push_token: String
 )
 
 data class RefreshToken(
-    var refresh_token: String?
+    var refresh_token: String?,
+    var push_token: String?
 )
 
 data class EmailPwd(
@@ -207,6 +210,12 @@ object consumption{
     val consumption: ArrayList<String> = arrayListOf("수입", "지출")
 }
 
+object tokens{
+    var access_token = ""
+    var refresh_token = ""
+    var push_token = ""
+}
+
 interface ResourceStore {
     companion object {
         val tabList = listOf(
@@ -216,4 +225,5 @@ interface ResourceStore {
             TabFragmentMonth.create(), TabFragmentYear.create())
     }
 }
+
 

@@ -2,6 +2,7 @@ package com.checkmoney
 
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -16,6 +17,7 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.checkmoney.Login.JoinPopupActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -24,7 +26,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import retrofit2.Call
@@ -82,6 +86,21 @@ class LoginActivity : AppCompatActivity() {
         // 구글로그인 세팅
         googleBuildIn()
 
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w(TAG, "Fetching FCM registration token failed", task.exception)
+                return@OnCompleteListener
+            }
+
+            // Get new FCM registration token
+            tokens.push_token = task.result
+
+            // Log and toast
+            val msg = getString(R.string.msg_token_fmt, tokens.push_token)
+            Log.d(TAG, msg)
+            Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+        })
+
         // 회원가입
         btn_join.setOnClickListener{
             val dialog = JoinPopupActivity(this@LoginActivity)
@@ -90,14 +109,14 @@ class LoginActivity : AppCompatActivity() {
 
         val gsa = GoogleSignIn.getLastSignedInAccount(this@LoginActivity)
         if (gsa?.id != null) {
-            val idTokenClass = IdToken(id_token = gsa.idToken)
+            val idTokenClass = IdToken(id_token = gsa.idToken, push_token = tokens.push_token)
             Log.d("TAG",gsa.email!!)
             postGoogle(idTokenClass, gsa.email!!)
         }
 
         btn_login.setOnClickListener {
             if(userId != "" && userPw != ""){
-                val userInfo = UserInfo(userId,userPw)
+                val userInfo = UserInfo(userId,userPw,tokens.push_token)
                 postLogin(userInfo)
             }
             if(userId == "" && userPw != ""){
@@ -209,7 +228,7 @@ class LoginActivity : AppCompatActivity() {
         // SharedPreferences 안에 값이 저장되어 있을 때 -> MainActivity로 이동
         if(!(AppPref.prefs.myId.isNullOrBlank()
             || AppPref.prefs.myPw.isNullOrBlank())) {
-            val userInfo = UserInfo(AppPref.prefs.myId!!, AppPref.prefs.myPw!!)
+            val userInfo = UserInfo(AppPref.prefs.myId!!, AppPref.prefs.myPw!!,tokens.push_token)
             postLogin(userInfo)
         }
     }
@@ -370,7 +389,7 @@ class LoginActivity : AppCompatActivity() {
                 Log.d(TAG,"email = $email")
                 Log.d(TAG,"idToken = $idToken")
 
-                val idTokenClass = IdToken(id_token = idToken)
+                val idTokenClass = IdToken(id_token = idToken, tokens.push_token)
 
                 postGoogle(idTokenClass, email!!)
             }
@@ -397,9 +416,10 @@ class LoginActivity : AppCompatActivity() {
                     Log.d("$TAG2 - postGoogle", "연결성공")
                     val responseApi = response.body()!!
                     Log.d("$TAG2 - postGoogle",responseApi.toString())
+                    tokens.access_token = responseApi.access_token!!
+                    tokens.refresh_token = responseApi.refresh_token!!
+
                     val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
-                    mainIntent.putExtra("access_token", responseApi.access_token)
-                    mainIntent.putExtra("refresh_token",responseApi.refresh_token)
                     mainIntent.putExtra("userId",email)
                     mainIntent.putExtra("userName",responseApi.name)
                     startActivity(mainIntent)
@@ -429,9 +449,10 @@ class LoginActivity : AppCompatActivity() {
                             Log.d("$TAG2 - postLogin", "로그인 성공")
                             AppPref.prefs.myId = userId
                             AppPref.prefs.myPw = userPw
+                            tokens.access_token = responseApi.access_token!!
+                            tokens.refresh_token = responseApi.refresh_token!!
+
                             val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
-                            mainIntent.putExtra("access_token", responseApi.access_token)
-                            mainIntent.putExtra("refresh_token",responseApi.refresh_token)
                             mainIntent.putExtra("userId",userId)
                             mainIntent.putExtra("userName",responseApi.name)
                             startActivity(mainIntent)
@@ -544,6 +565,12 @@ class LoginActivity : AppCompatActivity() {
                 text_authResult.text = "네트워크 문제가 발생하였습니다."
             }
         })
+    }
+    companion object {
+        @SuppressLint("StaticFieldLeak")
+        @JvmField
+        var context_login // context 변수 선언
+                : Context? = null
     }
 }
 
