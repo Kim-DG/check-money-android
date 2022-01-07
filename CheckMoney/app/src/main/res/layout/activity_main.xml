@@ -11,8 +11,6 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
-
         <LinearLayout
             android:id="@+id/linearLayout6"
             android:layout_width="match_parent"
@@ -104,8 +102,6 @@
         </LinearLayout>
 
 
-
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.navigation.NavigationView
@@ -113,7 +109,6 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:overScrollMode="never"
         app:headerLayout="@layout/nav_header_main"
         app:menu="@menu/navi_menu"
         app:itemIconTint="@color/logoSkyBlue"

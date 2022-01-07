@@ -94,7 +94,6 @@ class LoginActivity : AppCompatActivity() {
 
             // Get new FCM registration token
             tokens.push_token = task.result
-
             // Log and toast
             val msg = getString(R.string.msg_token_fmt, tokens.push_token)
             Log.d(TAG, msg)
