@@ -32,6 +32,7 @@
 
 #### 오른쪽 하단 plus icon click -> 거래 정보 입력 -> 생성 / 거래 내역 클릭 후 수정 가능
 #### 지출 / 수입 설정, 거래 category 설정 가능
+<br/>
 
 ## 6. Create fixed expenses
 <img width="20%" src ="https://user-images.githubusercontent.com/81103357/153555582-0523b918-37d5-4c76-8301-76cc8b38c90d.gif"/>
